@@ -75,3 +75,9 @@ var Team = teamStruct{
 	Enemy:   2,
 	Invalid: 0,
 }
+
+type Online struct {
+	Name string `json:"name"`
+	ID   string `json:"id"`
+	Team string `json:"team"`
+}

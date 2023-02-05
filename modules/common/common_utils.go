@@ -100,6 +100,8 @@ func LogEvent(message string, level string) {
 
 var Config Data
 
+var DefaultID = "76561198162340088"
+
 var Session *discordgo.Session
 
 var GetDB = make(chan *gorm.DB)

@@ -52,6 +52,7 @@ func init() {
 	CreateOrUpdateJSON("config.json")
 	beautifyJSONFile("config.json")
 	config, err = ReadJSON("config.json")
+
 	if err != nil {
 		panic(err)
 	}
@@ -61,6 +62,7 @@ func init() {
 	* 	by attempting to access config from main package.
 	 */
 	common.Config = config
+	checkAPIEndpoint()
 
 	/*
 	*	Database gets initialized, returning the DB engine to the variable DB, which then gets written to common.DB, for other

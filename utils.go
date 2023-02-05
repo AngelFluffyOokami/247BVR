@@ -3,10 +3,14 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
+	"net/http"
 	"os"
+	"strings"
 
 	"github.com/angelfluffyookami/247BVR/modules/common"
+	"github.com/angelfluffyookami/247BVR/modules/db/core_models"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -164,4 +168,71 @@ func CreateOrUpdateJSON(file string) error {
 	}
 
 	return nil
+}
+
+func checkAPIEndpoint() {
+	log.Println("Probing API endpoints to ensure responses match expected.")
+	URL := common.Config.APIEndpoint
+	if !strings.HasSuffix(URL, "/") {
+		common.Config.APIEndpoint = common.Config.APIEndpoint + "/"
+	}
+
+	go checkOnlineEndpoint()
+}
+
+func checkOnlineEndpoint() {
+	req, err := http.Get(common.Config.APIEndpoint + "online")
+	if err != nil {
+		log.Fatal("Error trying to submit HTTP GET request to /users")
+	}
+	log.Println("API Endpoint HTTP GET /online successful. Checking if JSON response matches expected.")
+
+	var Online []common.Online
+	body, err := io.ReadAll(req.Body)
+	if err != nil {
+		log.Fatal("Error trying to read /online response body.")
+	}
+	err = json.Unmarshal(body, &Online)
+	if err != nil {
+		log.Fatalf("JSON response does not match expected. /online \n %s\n", body)
+	}
+	log.Println("JSON response matches expected. /online")
+}
+
+func checkUsersEndpoint() {
+	req, err := http.Get(common.Config.APIEndpoint + "users")
+	if err != nil {
+		log.Fatal("Error trying to submit HTTP GET request to /users")
+	}
+	log.Println("API Endpoint HTTP GET /users successful. Checking if JSON response matches expected.")
+
+	var Online []core_models.User
+	body, err := io.ReadAll(req.Body)
+	if err != nil {
+		log.Fatal("Error trying to read /users response body.")
+	}
+	err = json.Unmarshal(body, &Online)
+	if err != nil {
+		log.Fatalf("JSON response does not match expected. /users \n %s\n", body)
+	}
+	log.Println("JSON response matches expected. /users")
+}
+
+func checkUserID() {
+	req, err := http.Get(common.Config.APIEndpoint + "users")
+	if err != nil {
+		log.Fatal("Error trying to submit HTTP GET request to /users")
+	}
+	log.Println("API Endpoint HTTP GET /users successful. Checking if JSON response matches expected.")
+
+	var Online []core_models.User
+	body, err := io.ReadAll(req.Body)
+	if err != nil {
+		log.Fatal("Error trying to read /users response body.")
+	}
+	err = json.Unmarshal(body, &Online)
+	if err != nil {
+		log.Fatalf("JSON response does not match expected. /users \n %s\n", body)
+	}
+	log.Println("JSON response matches expected. /users")
 }
