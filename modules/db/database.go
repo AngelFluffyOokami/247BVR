@@ -14,7 +14,7 @@ func InitDB() *gorm.DB {
 		panic(err)
 	}
 
-	cinnamondb.AutoMigrate(&coredb.Cinnamon{}, coredb.Kill{}, coredb.User{}, coredb.LimitedUserData{}, coredb.Death{})
+	cinnamondb.AutoMigrate(&coredb.Cinnamon{})
 
 	return cinnamondb
 }

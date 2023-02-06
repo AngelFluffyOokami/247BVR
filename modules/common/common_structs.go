@@ -81,3 +81,57 @@ type Online struct {
 	ID   string `json:"id"`
 	Team string `json:"team"`
 }
+
+type Kill struct {
+	KillerID       string `json:"killerId"`
+	VictimID       string `json:"victimId"`
+	VictimTeam     int    `json:"victimTeam"`
+	KillerTeam     int    `json:"killerTeam"`
+	Time           int64  `json:"time"`
+	KillerAircraft int    `json:"killerAircraft"`
+	VictimAircraft int    `json:"victimAircraft"`
+	Weapon         int    `json:"weapon"`
+	ID             string `json:"id"`
+}
+
+type Death struct {
+	VictimID       string
+	Time           int64
+	VictimAircraft int
+	ID             string
+}
+
+type LimitedUserData struct {
+	ID         string   `json:"id"`
+	PilotNames []string `gorm:"serializer:json" json:"pilotNames"`
+	Kill       int      `json:"kills"`
+	Deaths     int      `json:"deaths"`
+	ELO        float64  `json:"elo"`
+	Rank       int      `json:"rank"`
+}
+
+type User struct {
+	UID         string
+	ID          string             `json:"id"`
+	PilotNames  []string           `gorm:"serializer:json" json:"pilotNames"`
+	LoginTimes  []int64            `gorm:"serializer:json" json:"loginTimes"`
+	LogoutTimes []int64            `gorm:"serializer:json" json:"logoutTimes"`
+	Kills       int                `json:"kills"`
+	Deaths      int                `json:"deaths"`
+	Spawns      SpawnStruct        `gorm:"serializer:json" json:"spawns"`
+	ELO         float64            `json:"elo"`
+	ELOHistory  []ELOHistoryStruct `gorm:"serializer:json" json:"eloHistory"`
+	Rank        int                `json:"rank"`
+}
+
+type ELOHistoryStruct struct {
+	ELO  float64 `json:"elo"`
+	Time int64   `json:"time"`
+}
+type SpawnStruct struct {
+	AV42c   int `json:"0"`
+	F26b    int `json:"1"`
+	F45A    int `json:"2"`
+	AH94    int `json:"3"`
+	Invalid int `json:"4"`
+}
