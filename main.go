@@ -34,13 +34,13 @@ var DBMigrate []func()
 *	Bool channel off gets created to be able to signal the bot to shutdown at will.
 *
 *	Variable error created to be able to start the discord session without overwriting the global discord session variable.
+*
  */
 var config common.Data
 var off = make(chan bool)
 var err error
 
 func init() {
-
 	/*
 	*	CreateOrUpdateJSON() creates a json configuration file if not exists, if exists and doesn't have all the configuration options,
 	*	it updates the file to contain the missing config options, leaving the rest untouched in their state.
@@ -62,7 +62,7 @@ func init() {
 	* 	by attempting to access config from main package.
 	 */
 	common.Config = config
-	checkAPIEndpoint()
+	sanityCheck()
 
 	/*
 	*	Database gets initialized, returning the DB engine to the variable DB, which then gets written to common.DB, for other

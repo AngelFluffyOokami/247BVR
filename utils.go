@@ -1,16 +1,17 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/angelfluffyookami/247BVR/modules/common"
 	"github.com/bwmarrin/discordgo"
+	"github.com/goccy/go-json"
 )
 
 const (
@@ -169,161 +170,244 @@ func CreateOrUpdateJSON(file string) error {
 	return nil
 }
 
-func checkAPIEndpoint() {
+/*
+* Probes API endpoint to ensure API responses match expected.
+* Ran at init to ensure URL is not incorrect and/or changes were made to API.
+* Concurrent for ease of debugging purposes.
+* (I'm not gonna spend 3 minutes or so waiting for a sanity check every time I compile and debug this)
+ */
+func sanityCheck() {
 	log.Println("Probing API endpoints to ensure responses match expected.")
+
+	// Get URL from global variable.
 	URL := common.Config.APIEndpoint
+
+	// Checks if URL has slash at the end, if not, add it and save it to global variable.
 	if !strings.HasSuffix(URL, "/") {
+
 		common.Config.APIEndpoint = common.Config.APIEndpoint + "/"
 	}
 
-	var fatal bool
-	err = checkOnlineEndpoint()
-	if err != nil {
-		fatal = true
-		log.Println(err)
-	}
-	err = checkUsersEndpoint()
-	if err != nil {
-		fatal = true
-		log.Println(err)
-	}
-	err = checkUserID()
-	if err != nil {
-		fatal = true
-		log.Println(err)
-	}
-	err = checkKillsEndpoint()
-	if err != nil {
-		fatal = true
-		log.Println(err)
-	}
-	err = checkDeathEndpoint()
-	if err != nil {
-		fatal = true
-		log.Println(err)
-	}
-	err = checkLogEndpoint()
-	if err != nil {
-		fatal = true
-		log.Println(err)
-	}
-	if fatal {
-		log.Fatal("One or more JSON responses do not match expected.")
-	}
+	// A massive fuck you to whichever end receives these HTTP GETs depending on JSON dataset size.
+	go checkOnlineEndpoint(common.Config.Debugging)
+	go checkUsersEndpoint(common.Config.Debugging)
+	go checkUserID(common.Config.Debugging)
+	go checkKillsEndpoint(common.Config.Debugging)
+	go checkDeathEndpoint(common.Config.Debugging)
+	go checkLogEndpoint(common.Config.Debugging)
+
 }
 
-func checkOnlineEndpoint() error {
+// Sanity Check /online
+func checkOnlineEndpoint(debug bool) {
+
+	getBench := time.Now()
+
 	req, err := http.Get(common.Config.APIEndpoint + "online")
+
+	getExecTime := time.Since(getBench)
+
 	if err != nil {
-		return fmt.Errorf("error trying to submit HTTP GET request to /users")
+		log.Panicf("Sanity check: %s", err)
 	}
-	log.Println("API Endpoint HTTP GET /online successful. Checking if JSON response matches expected.")
+
+	if debug {
+		log.Println("API Endpoint HTTP GET /online successful." + `
+	` + "\nHTTP GET Time: " + getExecTime.String() + `
+	` + "Checking if JSON response matches expected.")
+	}
 
 	var Online []common.Online
-	body, err := io.ReadAll(req.Body)
+
+	unmarshalBench := time.Now()
+
+	err = json.NewDecoder(req.Body).Decode(&Online)
+
+	unmarshalExecTime := time.Since(unmarshalBench)
+
 	if err != nil {
-		return fmt.Errorf("error trying to read /online response body")
+		log.Panicf("Sanity check: %s", err)
 	}
-	err = json.Unmarshal(body, &Online)
-	if err != nil {
-		return fmt.Errorf("the JSON response does not match expected. /online \n %s", body)
+
+	if debug {
+		log.Println("JSON response matches expected. /online" + `
+	` + "JSON Unmarshal Exec Time: " + unmarshalExecTime.String())
 	}
-	log.Println("JSON response matches expected. /online")
-	return nil
+
 }
 
-func checkUsersEndpoint() error {
+// Sanity Check /users
+func checkUsersEndpoint(debug bool) {
+
+	getBench := time.Now()
+
 	req, err := http.Get(common.Config.APIEndpoint + "users")
+
+	getExecTime := time.Since(getBench)
+
 	if err != nil {
-		return fmt.Errorf("error trying to submit HTTP GET request to /users")
+		log.Panicf("Sanity check: %s", err)
 	}
-	log.Println("API Endpoint HTTP GET /users successful. Checking if JSON response matches expected.")
+
+	if debug {
+		log.Println("API Endpoint HTTP GET /users successful." + `
+	` + "\nHTTP GET Time: " + getExecTime.String() + `
+	` + "Checking if JSON response matches expected.")
+	}
 
 	var Users []common.User
-	body, err := io.ReadAll(req.Body)
+
+	unmarshalBench := time.Now()
+
+	err = json.NewDecoder(req.Body).Decode(&Users)
+
+	unmarshalExecTime := time.Since(unmarshalBench)
+
 	if err != nil {
-		return fmt.Errorf("error trying to read /users response body")
+		log.Panicf("Sanity check: %s", err)
 	}
-	err = json.Unmarshal(body, &Users)
-	if err != nil {
-		return fmt.Errorf("the JSON response does not match expected. /users \n %s", body)
+
+	if debug {
+		log.Println("JSON response matches expected. /users" + `
+		` + "JSON Unmarshal Exec Time: " + unmarshalExecTime.String())
 	}
-	log.Println("JSON response matches expected. /users")
-	return nil
+
 }
 
-func checkUserID() error {
+// Sanity Check /user/<id>
+func checkUserID(debug bool) {
+	getBench := time.Now()
+
 	req, err := http.Get(common.Config.APIEndpoint + "users/" + common.DefaultID)
+
+	getExecTime := time.Since(getBench)
+
 	if err != nil {
-		return fmt.Errorf("error trying to submit HTTP GET request to /users/<id>")
+		log.Panicf("Sanity check: %s", err)
 	}
-	log.Println("API Endpoint HTTP GET /users/<id> successful. Checking if JSON response matches expected.")
+
+	if debug {
+		log.Println("API Endpoint HTTP GET users/<id> successful." + `
+	` + "\nHTTP GET Time: " + getExecTime.String() + `
+	` + "Checking if JSON response matches expected.")
+	}
 
 	var User common.User
-	body, err := io.ReadAll(req.Body)
+
+	unmarshalBench := time.Now()
+
+	err = json.NewDecoder(req.Body).Decode(&User)
+
+	unmarshalExecTime := time.Since(unmarshalBench)
+
 	if err != nil {
-		return fmt.Errorf("error trying to read /users/<id> response body")
+		log.Panicf("Sanity check: %s", err)
 	}
-	err = json.Unmarshal(body, &User)
-	if err != nil {
-		return fmt.Errorf("the JSON response does not match expected. /users \n %s", body)
+
+	if debug {
+		log.Println("JSON response matches expected. /users/<id>" + `
+		` + "JSON Unmarshal Exec Time: " + unmarshalExecTime.String())
 	}
-	log.Println("JSON response matches expected. /users/<id>")
-	return nil
+
 }
 
-func checkKillsEndpoint() error {
+// Sanity Check /kills
+func checkKillsEndpoint(debug bool) {
+
+	getBench := time.Now()
+
 	req, err := http.Get(common.Config.APIEndpoint + "kills")
+
+	getExecTime := time.Since(getBench)
+
 	if err != nil {
-		return fmt.Errorf("error trying to submit HTTP GET request to /kills")
+		log.Panicf("Sanity check: %s", err)
 	}
-	log.Println("API Endpoint HTTP GET /kills successful. Checking if JSON response matches expected.")
+
+	if debug {
+		log.Println("API Endpoint HTTP GET /kills successful." + `
+	` + "\nHTTP GET Time: " + getExecTime.String() + `
+	` + "Checking if JSON response matches expected.")
+	}
 
 	var Kills []common.Kill
-	body, err := io.ReadAll(req.Body)
+
+	unmarshalBench := time.Now()
+
+	err = json.NewDecoder(req.Body).Decode(&Kills)
+
+	unmarshalExecTime := time.Since(unmarshalBench)
+
 	if err != nil {
-		return fmt.Errorf("error trying to read /kills response body")
+		log.Panicf("Sanity check: %s", err)
 	}
-	err = json.Unmarshal(body, &Kills)
-	if err != nil {
-		return fmt.Errorf("the JSON response does not match expected. /kills \n %s", body)
+
+	if debug {
+		log.Println("JSON response matches expected. /kills" + `
+	` + "JSON Unmarshal Exec Time: " + unmarshalExecTime.String())
 	}
-	log.Println("JSON response matches expected. /kills")
-	return nil
 }
 
-func checkDeathEndpoint() error {
+// Sanity Check /deaths
+func checkDeathEndpoint(debug bool) {
+
+	getBench := time.Now()
+
 	req, err := http.Get(common.Config.APIEndpoint + "/deaths")
+
+	getExecTime := time.Since(getBench)
+
 	if err != nil {
-		return fmt.Errorf("error trying to submit HTTP GET request to /deaths")
+		log.Panicf("Sanity check: %s", err)
 	}
-	log.Println("API Endpoint HTTP GET /deaths successful. Checking if JSON response matches expected.")
+
+	if debug {
+		log.Println("API Endpoint HTTP GET /deaths successful." + `
+	` + "\nHTTP GET Time: " + getExecTime.String() + `
+	` + "Checking if JSON response matches expected.")
+	}
 
 	var Kills []common.Kill
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
-		return fmt.Errorf("error trying to read /deaths response body")
+		log.Panicf("Sanity check: %s", err)
 	}
+
 	err = json.Unmarshal(body, &Kills)
 	if err != nil {
-		return fmt.Errorf("the JSON response does not match expected. /deaths \n %s", body)
+		log.Panicf("Sanity check: %s", err)
 	}
-	log.Println("JSON response matches expected. /deaths")
-	return nil
+
+	if debug {
+		log.Println("JSON response matches expected. /deaths")
+	}
+
 }
 
-func checkLogEndpoint() error {
+// Sanity Check /log/<id>
+func checkLogEndpoint(debug bool) {
+	getBench := time.Now()
+
 	req, err := http.Get(common.Config.APIEndpoint + "log/" + common.DefaultID)
+
+	getExecTime := time.Since(getBench)
+
 	if err != nil {
-		return fmt.Errorf("error trying to submit HTTP GET request to /log")
+		log.Panicf("Sanity check: %s", err)
 	}
-	log.Println("API Endpoint HTTP GET /kills successful. Checking if JSON response matches expected.")
+
+	if debug {
+		log.Println("API Endpoint HTTP GET /log successful." + `
+		` + "HTTP GET Time: " + getExecTime.String() + `
+		` + "Checking if TXT response matches expected.")
+	}
 
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
-		return fmt.Errorf("error trying to read /kills response body")
+		log.Panicf("Sanity check: %s", err)
 	}
 
-	log.Printf("TXT response received. /kills \n%s", body)
-	return nil
+	if debug {
+		log.Printf("TXT response received. /kills \n%s", body)
+	}
 }

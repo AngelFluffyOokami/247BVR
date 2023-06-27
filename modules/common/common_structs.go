@@ -83,15 +83,15 @@ type Online struct {
 }
 
 type Kill struct {
-	KillerID       string `json:"killerId"`
-	VictimID       string `json:"victimId"`
-	VictimTeam     int    `json:"victimTeam"`
-	KillerTeam     int    `json:"killerTeam"`
-	Time           int64  `json:"time"`
-	KillerAircraft int    `json:"killerAircraft"`
-	VictimAircraft int    `json:"victimAircraft"`
-	Weapon         int    `json:"weapon"`
-	ID             string `json:"id"`
+	KillerID       string `json:"killerId,omitempty"`
+	VictimID       string `json:"victimId,omitempty"`
+	VictimTeam     int    `json:"victimTeam,omitempty"`
+	KillerTeam     int    `json:"killerTeam,omitempty"`
+	Time           int64  `json:"time,omitempty"`
+	KillerAircraft int    `json:"killerAircraft,omitempty"`
+	VictimAircraft int    `json:"victimAircraft,omitempty"`
+	Weapon         int    `json:"weapon,omitempty"`
+	ID             string `json:"id,omitempty"`
 }
 
 type Death struct {
@@ -133,5 +133,6 @@ type SpawnStruct struct {
 	F26b    int `json:"1"`
 	F45A    int `json:"2"`
 	AH94    int `json:"3"`
-	Invalid int `json:"4"`
+	T55     int `json:"4"`
+	Invalid int `json:"5"`
 }
