@@ -188,7 +188,10 @@ func sanityCheck() {
 		common.Config.APIEndpoint = common.Config.APIEndpoint + "/"
 	}
 
-	// A massive fuck you to whichever end device receives these HTTP GETs depending on JSON dataset size.
+	/*
+	 * A massive (concurrent) fuck you to whichever end device receives these
+	 * HTTP GET requests depending on  JSON dataset size.
+	 */
 	go checkOnlineEndpoint(common.Config.Debugging)
 	go checkUsersEndpoint(common.Config.Debugging)
 	go checkUserID(common.Config.Debugging)
