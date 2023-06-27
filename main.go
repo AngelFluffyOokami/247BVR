@@ -75,6 +75,7 @@ func init() {
 	common.DBLoop(DB)
 	s = discord_session.InitSession(config.Token)
 	common.Session = s
+	common.Config.ActiveSession = true
 
 }
 

@@ -1,9 +1,5 @@
 package common
 
-import (
-	"time"
-)
-
 type Data struct {
 	Token         string
 	AdminServer   string
@@ -14,12 +10,7 @@ type Data struct {
 	UpdateChannel string
 	APIEndpoint   string
 	Debugging     bool
-}
-
-type LogEntry struct {
-	Time    time.Time
-	Message string
-	Level   string
+	ActiveSession bool
 }
 
 var AuthKeyUpdater []func(GID string, AuthKey string, OldKey string)
@@ -128,6 +119,7 @@ type ELOHistoryStruct struct {
 	ELO  float64 `json:"elo"`
 	Time int64   `json:"time"`
 }
+
 type SpawnStruct struct {
 	AV42c   int `json:"0"`
 	F26b    int `json:"1"`

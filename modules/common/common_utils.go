@@ -1,13 +1,7 @@
 package common
 
 import (
-	"encoding/json"
-	"fmt"
-	"os"
-	"runtime"
-	"time"
-
-	"github.com/bwmarrin/discordgo"
+	"github.com/angelfluffyookami/247BVR/modules/common/global"
 	"github.com/tjarratt/babble"
 	"gorm.io/gorm"
 )
@@ -22,16 +16,8 @@ func BabbleWords() string {
 	return key
 }
 
-const (
-	LogError    = "ERR"
-	LogWarning  = "WARN"
-	LogInfo     = "INFO"
-	LogUpdate   = "UPDATE"
-	LogFeedback = "FEEDBACK"
-)
-
 func GetGuildName(GID string) string {
-	s := Session
+	s := global.Session
 	guild, err := s.Guild(GID)
 	if err != nil {
 		return "Undefined. " + GID
@@ -41,7 +27,7 @@ func GetGuildName(GID string) string {
 }
 
 func GetGuildOwnerName(GID string) string {
-	s := Session
+	s := global.Session
 	g, err := s.Guild(GID)
 	if err != nil {
 		return "Undefined."
@@ -55,55 +41,12 @@ func GetGuildOwnerName(GID string) string {
 	}
 }
 
-func LogEvent(message string, level string) {
-
-	config := Config
-	s := Session
-	// create the log entry
-	entry := LogEntry{
-		Time:    time.Now(),
-		Message: message,
-		Level:   level,
-	}
-
-	// open the log file
-	logFile, err := os.OpenFile("opossum.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		panic(err)
-	}
-	defer logFile.Close()
-
-	// marshal the log entry
-	entryJSON, err := json.MarshalIndent(entry, "\n", "\n")
-	if err != nil {
-		panic(err)
-	}
-
-	// write the log entry to the file
-	if _, err := logFile.Write(entryJSON); err != nil {
-		panic(err)
-	}
-	if err := logFile.Sync(); err != nil {
-		panic(err)
-	}
-	switch level {
-	case "INFO":
-		s.ChannelMessageSend(config.InfoChannel, entry.Level+": \n"+entry.Message+"\n"+fmt.Sprint(entry.Time))
-	case "WARN":
-		s.ChannelMessageSend(config.WarnChannel, entry.Level+": \n"+entry.Message+"\n"+fmt.Sprint(entry.Time))
-	case "ERR":
-		s.ChannelMessageSend(config.ErrChannel, entry.Level+": \n"+entry.Message+"\n"+fmt.Sprint(entry.Time))
-	case "UPDATE":
-		s.ChannelMessageSend(config.UpdateChannel, entry.Level+": \n"+entry.Message+"\n"+fmt.Sprint(entry.Time))
-	}
-}
-
 var Config Data
 
+// Absolutely no idea what this global variable does. Too scared to touch.
 var DefaultID = "76561198162340088"
 
-var Session *discordgo.Session
-
+// Massive fuck you to readability. But necessary in case a function tries to use the DB at same time as another... Damned be SQLite.
 var GetDB = make(chan *gorm.DB)
 var DoneDB = make(chan bool)
 
@@ -112,30 +55,4 @@ func DBLoop(DB *gorm.DB) {
 		GetDB <- DB
 		<-DoneDB
 	}
-}
-
-func RecoverPanic(channelID string) {
-
-	if r := recover(); r != nil {
-
-		s := Session
-
-		// get the stack trace of the panic
-		tempbuf := make([]byte, 10000)
-		buflength := runtime.Stack(tempbuf, false)
-		var buf []byte
-		if buflength >= 1900 {
-			buf = make([]byte, 1900)
-		} else {
-			buf = make([]byte, buflength)
-		}
-		runtime.Stack(buf, false)
-
-		LogEvent(fmt.Sprintf("Recovering from panic: %v\n Stack trace: %s", r, buf), "ERR")
-		if channelID != "" {
-			s.ChannelMessageSend(channelID, "Error processing command.\nBug report sent to developers.")
-		}
-
-	}
-
 }

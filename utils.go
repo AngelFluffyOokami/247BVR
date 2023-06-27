@@ -188,7 +188,7 @@ func sanityCheck() {
 		common.Config.APIEndpoint = common.Config.APIEndpoint + "/"
 	}
 
-	// A massive fuck you to whichever end receives these HTTP GETs depending on JSON dataset size.
+	// A massive fuck you to whichever end device receives these HTTP GETs depending on JSON dataset size.
 	go checkOnlineEndpoint(common.Config.Debugging)
 	go checkUsersEndpoint(common.Config.Debugging)
 	go checkUserID(common.Config.Debugging)
@@ -208,13 +208,14 @@ func checkOnlineEndpoint(debug bool) {
 	getExecTime := time.Since(getBench)
 
 	if err != nil {
-		log.Panicf("Sanity check: %s", err)
+		//fmt.Printf("Sanity Check: "+err.Error(), common.LogError)
 	}
 
 	if debug {
-		log.Println("API Endpoint HTTP GET /online successful." + `
-	` + "\nHTTP GET Time: " + getExecTime.String() + `
-	` + "Checking if JSON response matches expected.")
+		common.LogEvent("API Endpoint HTTP GET /online successful."+`
+		`+"\nHTTP GET Time: "+getExecTime.String()+`
+		`+"Checking if JSON response matches expected.",
+			common.LogInfo)
 	}
 
 	var Online []common.Online
@@ -226,12 +227,12 @@ func checkOnlineEndpoint(debug bool) {
 	unmarshalExecTime := time.Since(unmarshalBench)
 
 	if err != nil {
-		log.Panicf("Sanity check: %s", err)
+		common.LogEvent("Sanity check: "+err.Error(), common.LogError)
 	}
 
 	if debug {
-		log.Println("JSON response matches expected. /online" + `
-	` + "JSON Unmarshal Exec Time: " + unmarshalExecTime.String())
+		common.LogEvent("JSON response matches expected. /online"+`
+	`+"JSON Unmarshal Exec Time: "+unmarshalExecTime.String(), common.LogInfo)
 	}
 
 }
@@ -246,14 +247,12 @@ func checkUsersEndpoint(debug bool) {
 	getExecTime := time.Since(getBench)
 
 	if err != nil {
-		log.Panicf("Sanity check: %s", err)
+		common.LogEvent("Sanity check: "+err.Error(), common.LogError)
 	}
 
-	if debug {
-		log.Println("API Endpoint HTTP GET /users successful." + `
-	` + "\nHTTP GET Time: " + getExecTime.String() + `
-	` + "Checking if JSON response matches expected.")
-	}
+	common.LogEvent("API Endpoint HTTP GET /users successful."+`
+	`+"\nHTTP GET Time: "+getExecTime.String()+`
+	`+"Checking if JSON response matches expected.", common.LogInfo)
 
 	var Users []common.User
 
@@ -264,7 +263,7 @@ func checkUsersEndpoint(debug bool) {
 	unmarshalExecTime := time.Since(unmarshalBench)
 
 	if err != nil {
-		log.Panicf("Sanity check: %s", err)
+		common.LogEvent("Sanity check: "+err.Error(), common.LogInfo)
 	}
 
 	if debug {
