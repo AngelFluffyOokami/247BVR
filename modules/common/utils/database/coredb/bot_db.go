@@ -1,4 +1,4 @@
-package core_models
+package coredb
 
 type Cinnamon struct {
 	BotID           string `gorm:"primaryKey"`

@@ -8,7 +8,8 @@ import (
 
 	"github.com/angelfluffyookami/247BVR/modules/common"
 	"github.com/angelfluffyookami/247BVR/modules/common/global"
-	"github.com/angelfluffyookami/247BVR/modules/common/utils/db/globaldb"
+	"github.com/angelfluffyookami/247BVR/modules/common/utils/database"
+	"github.com/angelfluffyookami/247BVR/modules/common/utils/database/globaldb"
 
 	discord_session "github.com/angelfluffyookami/247BVR/modules/session"
 	"github.com/bwmarrin/discordgo"

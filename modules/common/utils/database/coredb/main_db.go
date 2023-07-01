@@ -1,1 +1,1 @@
-package core_models
+package coredb
