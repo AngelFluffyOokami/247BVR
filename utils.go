@@ -8,9 +8,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/angelfluffyookami/247BVR/modules/common"
+	"github.com/angelfluffyookami/247BVR/modules/bvr"
 	"github.com/angelfluffyookami/247BVR/modules/common/global"
 	"github.com/angelfluffyookami/247BVR/modules/common/utils/logger"
+
 	"github.com/bwmarrin/discordgo"
 	"github.com/goccy/go-json"
 )
@@ -27,7 +28,7 @@ const (
 )
 
 // Function reads json file, returning variable of type config.Data
-func ReadJSON(filename string) (common.Data, error) {
+func ReadJSON(filename string) (global.Data, error) {
 	//	Reads file and saves []byte to variable data, then checks if there was an error, if error, then return nil config and error.
 	data, err := os.ReadFile(filename)
 	if err != nil {
@@ -115,11 +116,11 @@ func beautifyJSONFile(filename string) {
 // CreateOrUpdateJSON creates or updates a JSON file with two keys
 func CreateOrUpdateJSON(file string) error {
 	// Read the existing file
-	data := common.Data{}
+	data := global.Data{}
 	bytes, err := os.ReadFile(file)
 	if err != nil {
 		// File does not exist, create it
-		data = common.Data{
+		data = global.Data{
 			Token:         token,
 			AdminServer:   adminserver,
 			AdminChannel:  adminchannel,
@@ -181,24 +182,24 @@ func sanityCheck() {
 	log.Info().Message("Probing API endpoints to ensure responses match expected.").Add()
 
 	// Get URL from global variable.
-	URL := common.Config.APIEndpoint
+	URL := global.Config.APIEndpoint
 
 	// Checks if URL has slash at the end, if not, add it and save it to global variable.
 	if !strings.HasSuffix(URL, "/") {
 
-		common.Config.APIEndpoint = common.Config.APIEndpoint + "/"
+		global.Config.APIEndpoint = global.Config.APIEndpoint + "/"
 	}
 
 	/*
 	 * A massive (concurrent) fuck you to whichever end device receives these
 	 * HTTP GET requests depending on  JSON dataset size.
 	 */
-	go checkOnlineEndpoint(common.Config.Debugging)
-	go checkUsersEndpoint(common.Config.Debugging)
-	go checkUserID(common.Config.Debugging)
-	go checkKillsEndpoint(common.Config.Debugging)
-	go checkDeathEndpoint(common.Config.Debugging)
-	go checkLogEndpoint(common.Config.Debugging)
+	go checkOnlineEndpoint(global.Config.Debugging)
+	go checkUsersEndpoint(global.Config.Debugging)
+	go checkUserID(global.Config.Debugging)
+	go checkKillsEndpoint(global.Config.Debugging)
+	go checkDeathEndpoint(global.Config.Debugging)
+	go checkLogEndpoint(global.Config.Debugging)
 }
 
 var log = logger.Log{}
@@ -208,7 +209,7 @@ func checkOnlineEndpoint(debug bool) {
 
 	getBench := time.Now()
 
-	req, err := http.Get(common.Config.APIEndpoint + "online")
+	req, err := http.Get(global.Config.APIEndpoint + "online")
 
 	getExecTime := time.Since(getBench)
 
@@ -222,7 +223,7 @@ func checkOnlineEndpoint(debug bool) {
 		` + "Checking if JSON response matches expected.").Add()
 	}
 
-	var Online []common.Online
+	var Online []bvr.Online
 
 	unmarshalBench := time.Now()
 
@@ -246,7 +247,7 @@ func checkUsersEndpoint(debug bool) {
 
 	getBench := time.Now()
 
-	req, err := http.Get(common.Config.APIEndpoint + "users")
+	req, err := http.Get(global.Config.APIEndpoint + "users")
 
 	getExecTime := time.Since(getBench)
 
@@ -258,7 +259,7 @@ func checkUsersEndpoint(debug bool) {
 	` + "\nHTTP GET Time: " + getExecTime.String() + `
 	` + "Checking if JSON response matches expected.").Add()
 
-	var Users []common.User
+	var Users []bvr.User
 
 	unmarshalBench := time.Now()
 
@@ -281,7 +282,7 @@ func checkUsersEndpoint(debug bool) {
 func checkUserID(debug bool) {
 	getBench := time.Now()
 
-	req, err := http.Get(common.Config.APIEndpoint + "users/" + global.DefaultID)
+	req, err := http.Get(global.Config.APIEndpoint + "users/" + global.DefaultID)
 
 	getExecTime := time.Since(getBench)
 
@@ -295,7 +296,7 @@ func checkUserID(debug bool) {
 	` + "Checking if JSON response matches expected.").Add()
 	}
 
-	var User common.User
+	var User bvr.User
 
 	unmarshalBench := time.Now()
 
@@ -319,7 +320,7 @@ func checkKillsEndpoint(debug bool) {
 
 	getBench := time.Now()
 
-	req, err := http.Get(common.Config.APIEndpoint + "kills")
+	req, err := http.Get(global.Config.APIEndpoint + "kills")
 
 	getExecTime := time.Since(getBench)
 
@@ -333,7 +334,7 @@ func checkKillsEndpoint(debug bool) {
 	` + "Checking if JSON response matches expected.").Add()
 	}
 
-	var Kills []common.Kill
+	var Kills []bvr.Kill
 
 	unmarshalBench := time.Now()
 
@@ -356,7 +357,7 @@ func checkDeathEndpoint(debug bool) {
 
 	getBench := time.Now()
 
-	req, err := http.Get(common.Config.APIEndpoint + "/deaths")
+	req, err := http.Get(global.Config.APIEndpoint + "/deaths")
 
 	getExecTime := time.Since(getBench)
 
@@ -370,7 +371,7 @@ func checkDeathEndpoint(debug bool) {
 	` + "Checking if JSON response matches expected.").Add()
 	}
 
-	var Kills []common.Kill
+	var Kills []bvr.Kill
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		log.Err().Panic().Message("Sanity check: " + err.Error()).Add()
@@ -391,7 +392,7 @@ func checkDeathEndpoint(debug bool) {
 func checkLogEndpoint(debug bool) {
 	getBench := time.Now()
 
-	req, err := http.Get(common.Config.APIEndpoint + "log/" + global.DefaultID)
+	req, err := http.Get(global.Config.APIEndpoint + "log/" + global.DefaultID)
 
 	getExecTime := time.Since(getBench)
 

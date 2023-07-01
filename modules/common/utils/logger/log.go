@@ -7,7 +7,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/angelfluffyookami/247BVR/modules/common"
 	"github.com/angelfluffyookami/247BVR/modules/common/global"
 )
 
@@ -100,7 +99,7 @@ func (l *Log) Add() {
 }
 
 func (l *Log) sendAlert() {
-	config := common.Config
+	config := global.Config
 	s := global.Session
 	switch l.entry.level {
 	case "INFO":

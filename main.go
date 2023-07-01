@@ -6,7 +6,6 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/angelfluffyookami/247BVR/modules/common"
 	"github.com/angelfluffyookami/247BVR/modules/common/global"
 	"github.com/angelfluffyookami/247BVR/modules/common/utils/database"
 	"github.com/angelfluffyookami/247BVR/modules/common/utils/database/globaldb"
@@ -39,7 +38,7 @@ var DBMigrate []func()
 *	Variable error created to be able to start the discord session without overwriting the global discord session variable.
 *
  */
-var config common.Data
+var config global.Data
 var off = make(chan bool)
 var err error
 
@@ -64,7 +63,7 @@ func init() {
 	*	Variable config saves its value to common.Config for other modules to access without causing circular dependency import
 	* 	by attempting to access config from main package.
 	 */
-	common.Config = config
+	global.Config = config
 	sanityCheck()
 
 	/*
@@ -78,7 +77,7 @@ func init() {
 	globaldb.DBLoop(DB)
 	s = discord_session.InitSession(config.Token)
 	global.Session = s
-	common.Config.ActiveSession = true
+	global.Config.ActiveSession = true
 
 }
 

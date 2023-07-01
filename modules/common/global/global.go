@@ -6,3 +6,5 @@ var Session *discordgo.Session
 
 // Absolutely no idea what this global variable does. Too scared to touch.
 var DefaultID = "76561198162340088"
+
+var Config Data

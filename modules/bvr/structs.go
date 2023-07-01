@@ -1,19 +1,4 @@
-package common
-
-type Data struct {
-	Token         string
-	AdminServer   string
-	AdminChannel  string
-	InfoChannel   string
-	WarnChannel   string
-	ErrChannel    string
-	UpdateChannel string
-	APIEndpoint   string
-	Debugging     bool
-	ActiveSession bool
-}
-
-var AuthKeyUpdater []func(GID string, AuthKey string, OldKey string)
+package bvr
 
 type aircraftStruct struct {
 	AV42c   int
