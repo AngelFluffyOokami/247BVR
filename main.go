@@ -66,7 +66,9 @@ func init() {
 	* 	by attempting to access config from main package.
 	 */
 	global.Config = config
-	sanityCheck()
+
+	// Sanity check commented out due to not being needed no more.
+	// sanityCheck()
 
 	go bvr.InitCache()
 	<-bvr.InitDone

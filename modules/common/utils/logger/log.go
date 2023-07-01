@@ -10,9 +10,9 @@ import (
 )
 
 type logEntry struct {
-	time    time.Time
-	message string
-	level   string
+	Time    time.Time `json:"time"`
+	Message string    `json:"message"`
+	Level   string    `json:"level"`
 }
 
 type Log struct {
@@ -21,32 +21,32 @@ type Log struct {
 }
 
 func (l *Log) Update() *Log {
-	l.entry.level = "UPDATE"
+	l.entry.Level = "UPDATE"
 	return l
 }
 
 func (l *Log) Info() *Log {
-	l.entry.level = "INFO"
+	l.entry.Level = "INFO"
 	return l
 }
 
 func (l *Log) Warn() *Log {
-	l.entry.level = "WARN"
+	l.entry.Level = "WARN"
 	return l
 }
 
 func (l *Log) Err() *Log {
-	l.entry.level = "ERROR"
+	l.entry.Level = "ERROR"
 	return l
 }
 
 func (l *Log) Fatal() *Log {
-	l.entry.level = "FATAL"
+	l.entry.Level = "FATAL"
 	return l
 }
 
 func (l *Log) Message(m string) *Log {
-	l.entry.message = m
+	l.entry.Message = m
 	return l
 }
 
@@ -61,6 +61,8 @@ func (l *Log) Alert() *Log {
 
 // Adds log to logfile.json
 func (l *Log) Add() {
+
+	l.entry.Time = time.Now()
 
 	// open the log file
 	logFile, err := os.OpenFile("logfile.json", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
@@ -91,16 +93,16 @@ func (l *Log) Add() {
 func (l *Log) sendAlert() {
 	config := global.Config
 	s := global.Session
-	switch l.entry.level {
+	switch l.entry.Level {
 	case "INFO":
-		s.ChannelMessageSend(config.InfoChannel, l.entry.level+": \n"+l.entry.message+"\n"+fmt.Sprint(l.entry.time))
+		s.ChannelMessageSend(config.InfoChannel, l.entry.Level+": \n"+l.entry.Message+"\n"+fmt.Sprint(l.entry.Time))
 	case "WARN":
-		s.ChannelMessageSend(config.WarnChannel, l.entry.level+": \n"+l.entry.message+"\n"+fmt.Sprint(l.entry.time))
+		s.ChannelMessageSend(config.WarnChannel, l.entry.Level+": \n"+l.entry.Message+"\n"+fmt.Sprint(l.entry.Time))
 	case "ERR":
-		s.ChannelMessageSend(config.ErrChannel, l.entry.level+": \n"+l.entry.message+"\n"+fmt.Sprint(l.entry.time))
+		s.ChannelMessageSend(config.ErrChannel, l.entry.Level+": \n"+l.entry.Message+"\n"+fmt.Sprint(l.entry.Time))
 	case "FATAL":
-		s.ChannelMessageSend(config.ErrChannel, l.entry.level+": \n"+l.entry.message+"\n"+fmt.Sprint(l.entry.time))
+		s.ChannelMessageSend(config.ErrChannel, l.entry.Level+": \n"+l.entry.Message+"\n"+fmt.Sprint(l.entry.Time))
 	case "UPDATE":
-		s.ChannelMessageSend(config.UpdateChannel, l.entry.level+": \n"+l.entry.message+"\n"+fmt.Sprint(l.entry.time))
+		s.ChannelMessageSend(config.UpdateChannel, l.entry.Level+": \n"+l.entry.Message+"\n"+fmt.Sprint(l.entry.Time))
 	}
 }

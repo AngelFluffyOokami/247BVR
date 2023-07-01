@@ -174,6 +174,7 @@ func CreateOrUpdateJSON(file string) error {
 }
 
 /*
+* DEPRECATED ! !
 * Probes API endpoint to ensure API responses match expected.
 * Ran at init to ensure URL is not incorrect and/or changes were made to API.
 * Concurrent for ease of debugging purposes.
@@ -254,6 +255,7 @@ func checkOnlineEndpoint(debug bool, retryCount int) {
 
 	defer func() {
 		if hadError {
+			logging.Err().Message("/online sanity check fail, retrying.").Add()
 			mult := retryCount + 1
 			baseTime := time.Duration(30 * mult)
 			tick := time.NewTimer(baseTime * time.Second)
@@ -310,6 +312,7 @@ func checkUsersEndpoint(debug bool, retryCount int) {
 
 	defer func() {
 		if hadError {
+			logging.Err().Message("/user sanity check fail, retrying.").Add()
 			mult := retryCount + 1
 			baseTime := time.Duration(30 * mult)
 			tick := time.NewTimer(baseTime * time.Second)
@@ -367,6 +370,7 @@ func checkUserID(debug bool, retryCount int) {
 
 	defer func() {
 		if hadError {
+			logging.Err().Message("/user/<id> sanity check fail, retrying.").Add()
 			mult := retryCount + 1
 			baseTime := time.Duration(30 * mult)
 			tick := time.NewTimer(baseTime * time.Second)
@@ -425,6 +429,7 @@ func checkKillsEndpoint(debug bool, retryCount int) {
 
 	defer func() {
 		if hadError {
+			logging.Err().Message("/kills sanity check fail, retrying.").Add()
 			mult := retryCount + 1
 			baseTime := time.Duration(30 * mult)
 			tick := time.NewTimer(baseTime * time.Second)
@@ -484,6 +489,7 @@ func checkDeathEndpoint(debug bool, retryCount int) {
 
 	defer func() {
 		if hadError {
+			logging.Err().Message("/death sanity check fail, retrying.").Add()
 			mult := retryCount + 1
 			baseTime := time.Duration(30 * mult)
 			tick := time.NewTimer(baseTime * time.Second)
@@ -536,6 +542,7 @@ func checkLogEndpoint(debug bool, retryCount int) {
 
 	defer func() {
 		if hadError {
+			logging.Err().Message("/log/<id> sanity check fail, retrying.").Add()
 			mult := retryCount + 1
 			baseTime := time.Duration(30 * mult)
 			tick := time.NewTimer(baseTime * time.Second)

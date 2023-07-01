@@ -24,7 +24,7 @@ func InitCache() {
 	for {
 		select {
 		case <-tick.C:
-			syncCache()
+			go syncCache()
 		case pause := <-PauseCache:
 			switch pause {
 			case true:
@@ -76,6 +76,7 @@ func syncKills(retryCount int64) {
 
 	defer func() {
 		if hadError {
+			logging.Err().Message("/online sanity check fail, retrying.").Add()
 			mult := retryCount + 1
 			baseTime := time.Duration(30 * mult)
 			tick := time.NewTimer(baseTime * time.Second)
@@ -116,6 +117,7 @@ func syncUsers(retryCount int64) {
 
 	defer func() {
 		if hadError {
+			logging.Err().Message("/online sanity check fail, retrying.").Add()
 			mult := retryCount + 1
 			baseTime := time.Duration(30 * mult)
 			tick := time.NewTimer(baseTime * time.Second)
@@ -156,6 +158,7 @@ func syncDeaths(retryCount int64) {
 
 	defer func() {
 		if hadError {
+			logging.Err().Message("/online sanity check fail, retrying.").Add()
 			mult := retryCount + 1
 			baseTime := time.Duration(30 * mult)
 			tick := time.NewTimer(baseTime * time.Second)
@@ -197,6 +200,7 @@ func syncOnline(retryCount int64) {
 
 	defer func() {
 		if hadError {
+			logging.Err().Message("/online sanity check fail, retrying.").Add()
 			mult := retryCount + 1
 			baseTime := time.Duration(30 * mult)
 			tick := time.NewTimer(baseTime * time.Second)
