@@ -223,7 +223,7 @@ func checkOnlineEndpoint(debug bool) {
 		` + "Checking if JSON response matches expected.").Add()
 	}
 
-	var Online []bvr.Online
+	var Online []bvr.OnlineStruct
 
 	unmarshalBench := time.Now()
 
@@ -259,7 +259,7 @@ func checkUsersEndpoint(debug bool) {
 	` + "\nHTTP GET Time: " + getExecTime.String() + `
 	` + "Checking if JSON response matches expected.").Add()
 
-	var Users []bvr.User
+	var Users []bvr.UserStruct
 
 	unmarshalBench := time.Now()
 
@@ -296,7 +296,7 @@ func checkUserID(debug bool) {
 	` + "Checking if JSON response matches expected.").Add()
 	}
 
-	var User bvr.User
+	var User bvr.UserStruct
 
 	unmarshalBench := time.Now()
 
@@ -334,7 +334,7 @@ func checkKillsEndpoint(debug bool) {
 	` + "Checking if JSON response matches expected.").Add()
 	}
 
-	var Kills []bvr.Kill
+	var Kills []bvr.KillStruct
 
 	unmarshalBench := time.Now()
 
@@ -371,7 +371,7 @@ func checkDeathEndpoint(debug bool) {
 	` + "Checking if JSON response matches expected.").Add()
 	}
 
-	var Kills []bvr.Kill
+	var Kills []bvr.KillStruct
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		log.Err().Panic().Message("Sanity check: " + err.Error()).Add()

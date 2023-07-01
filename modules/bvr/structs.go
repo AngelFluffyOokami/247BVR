@@ -1,6 +1,6 @@
 package bvr
 
-type aircraftStruct struct {
+type AircraftStruct struct {
 	AV42c   int
 	FA26b   int
 	F45A    int
@@ -8,7 +8,7 @@ type aircraftStruct struct {
 	Invalid int
 }
 
-var Aircraft = aircraftStruct{
+var Aircraft = AircraftStruct{
 	AV42c:   1,
 	FA26b:   2,
 	F45A:    3,
@@ -16,7 +16,7 @@ var Aircraft = aircraftStruct{
 	Invalid: 0,
 }
 
-type weaponStruct struct {
+type WeaponStruct struct {
 	Gun     int
 	AIM120  int
 	AIM9    int
@@ -28,7 +28,7 @@ type weaponStruct struct {
 	Invalid int
 }
 
-var Weapon = weaponStruct{
+var Weapon = WeaponStruct{
 	Gun:     1,
 	AIM120:  2,
 	AIM9:    3,
@@ -40,25 +40,25 @@ var Weapon = weaponStruct{
 	Invalid: 0,
 }
 
-type teamStruct struct {
+type TeamStruct struct {
 	Allied  int
 	Enemy   int
 	Invalid int
 }
 
-var Team = teamStruct{
+var Team = TeamStruct{
 	Allied:  1,
 	Enemy:   2,
 	Invalid: 0,
 }
 
-type Online struct {
+type OnlineStruct struct {
 	Name string `json:"name"`
 	ID   string `json:"id"`
 	Team string `json:"team"`
 }
 
-type Kill struct {
+type KillStruct struct {
 	KillerID       string `json:"killerId,omitempty"`
 	VictimID       string `json:"victimId,omitempty"`
 	VictimTeam     int    `json:"victimTeam,omitempty"`
@@ -70,14 +70,14 @@ type Kill struct {
 	ID             string `json:"id,omitempty"`
 }
 
-type Death struct {
+type DeathStruct struct {
 	VictimID       string
 	Time           int64
 	VictimAircraft int
 	ID             string
 }
 
-type LimitedUserData struct {
+type LimitedUserDataStruct struct {
 	ID         string   `json:"id"`
 	PilotNames []string `gorm:"serializer:json" json:"pilotNames"`
 	Kill       int      `json:"kills"`
@@ -86,7 +86,7 @@ type LimitedUserData struct {
 	Rank       int      `json:"rank"`
 }
 
-type User struct {
+type UserStruct struct {
 	UID         string
 	ID          string             `json:"id"`
 	PilotNames  []string           `gorm:"serializer:json" json:"pilotNames"`
