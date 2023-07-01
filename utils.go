@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -55,13 +56,13 @@ func initDiscordHandlers() {
 		}
 	})
 
-	log.Info().Message("Adding commands...").Add()
+	logging.Info().Message("Adding commands...").Add()
 	// registers commands with the discord session.
 	registeredCommands := make([]*discordgo.ApplicationCommand, len(allCommands))
 	for i, v := range allCommands {
 		cmd, err := s.ApplicationCommandCreate(s.State.User.ID, "", &v)
 		if err != nil {
-			log.Err().Panic().Message("Cannot create '" + v.Name + "' command: " + err.Error())
+			logging.Err().Message("Cannot create '" + v.Name + "' command: " + err.Error())
 		}
 		registeredCommands[i] = cmd
 	}
@@ -179,7 +180,7 @@ func CreateOrUpdateJSON(file string) error {
 * (I'm not gonna spend 3 minutes or so waiting for a sanity check every time I compile and debug this)
  */
 func sanityCheck() {
-	log.Info().Message("Probing API endpoints to ensure responses match expected.").Add()
+	logging.Info().Message("Probing API endpoints to ensure responses match expected.").Add()
 
 	// Get URL from global variable.
 	URL := global.Config.APIEndpoint
@@ -194,18 +195,20 @@ func sanityCheck() {
 	 * A massive (concurrent) fuck you to whichever end device receives these
 	 * HTTP GET requests depending on  JSON dataset size.
 	 */
-	go checkOnlineEndpoint(global.Config.Debugging)
-	go checkUsersEndpoint(global.Config.Debugging)
-	go checkUserID(global.Config.Debugging)
-	go checkKillsEndpoint(global.Config.Debugging)
-	go checkDeathEndpoint(global.Config.Debugging)
-	go checkLogEndpoint(global.Config.Debugging)
+	go checkOnlineEndpoint(global.Config.Debugging, 0)
+	go checkUsersEndpoint(global.Config.Debugging, 0)
+	go checkUserID(global.Config.Debugging, 0)
+	go checkDeathEndpoint(global.Config.Debugging, 0)
+	go checkKillsEndpoint(global.Config.Debugging, 0)
+	go checkLogEndpoint(global.Config.Debugging, 0)
 }
 
-var log = logger.Log{}
+var logging = logger.Log{}
 
 // Sanity Check /online
-func checkOnlineEndpoint(debug bool) {
+func checkOnlineEndpoint(debug bool, retryCount int) {
+
+	var hadError bool
 
 	getBench := time.Now()
 
@@ -214,11 +217,15 @@ func checkOnlineEndpoint(debug bool) {
 	getExecTime := time.Since(getBench)
 
 	if err != nil {
-		log.Err().Panic().Message("Sanity Check: " + err.Error()).Add()
+		if retryCount == 4 {
+			logging.Err().Message("Sanity check: " + err.Error()).Add()
+			log.Fatal("Sanity check retry amount exceeded, counting as fatal.")
+		}
+		hadError = true
 	}
 
 	if debug {
-		log.Info().Message("API Endpoint HTTP GET /online successful." + `
+		logging.Info().Message("API Endpoint HTTP GET /online successful." + `
 		` + "\nHTTP GET Time: " + getExecTime.String() + `
 		` + "Checking if JSON response matches expected.").Add()
 	}
@@ -232,18 +239,35 @@ func checkOnlineEndpoint(debug bool) {
 	unmarshalExecTime := time.Since(unmarshalBench)
 
 	if err != nil {
-		log.Err().Message("Sanity check: " + err.Error()).Add()
+		if retryCount == 4 {
+			logging.Err().Message("Sanity check: " + err.Error()).Add()
+			log.Fatal("Sanity check retry amount exceeded, counting as fatal.")
+		}
+		hadError = true
+
 	}
 
 	if debug {
-		log.Info().Message("JSON response matches expected. /online" + `
+		logging.Info().Message("JSON response matches expected. /online" + `
 	` + "JSON Unmarshal Exec Time: " + unmarshalExecTime.String()).Add()
 	}
 
+	defer func() {
+		if hadError {
+			mult := retryCount + 1
+			baseTime := time.Duration(30 * mult)
+			tick := time.NewTimer(baseTime * time.Second)
+			<-tick.C
+			checkLogEndpoint(debug, retryCount+1)
+			tick.Stop()
+		}
+	}()
 }
 
 // Sanity Check /users
-func checkUsersEndpoint(debug bool) {
+func checkUsersEndpoint(debug bool, retryCount int) {
+
+	var hadError bool
 
 	getBench := time.Now()
 
@@ -252,10 +276,14 @@ func checkUsersEndpoint(debug bool) {
 	getExecTime := time.Since(getBench)
 
 	if err != nil {
-		log.Err().Message("Sanity check: " + err.Error()).Add()
+		if retryCount == 4 {
+			logging.Err().Message("Sanity check: " + err.Error()).Add()
+			log.Fatal("Sanity check retry amount exceeded, counting as fatal.")
+		}
+		hadError = true
 	}
 
-	log.Info().Message("API Endpoint HTTP GET /users successful." + `
+	logging.Info().Message("API Endpoint HTTP GET /users successful." + `
 	` + "\nHTTP GET Time: " + getExecTime.String() + `
 	` + "Checking if JSON response matches expected.").Add()
 
@@ -268,30 +296,50 @@ func checkUsersEndpoint(debug bool) {
 	unmarshalExecTime := time.Since(unmarshalBench)
 
 	if err != nil {
-		log.Err().Message("Sanity check: " + err.Error()).Add()
+		if retryCount == 4 {
+			logging.Err().Message("Sanity check: " + err.Error()).Add()
+			log.Fatal("Sanity check retry amount exceeded, counting as fatal.")
+		}
+		hadError = true
 	}
 
 	if debug {
-		log.Info().Message("JSON response matches expected. /users" + `
+		logging.Info().Message("JSON response matches expected. /users" + `
 		` + "JSON Unmarshal Exec Time: " + unmarshalExecTime.String()).Add()
 	}
+
+	defer func() {
+		if hadError {
+			mult := retryCount + 1
+			baseTime := time.Duration(30 * mult)
+			tick := time.NewTimer(baseTime * time.Second)
+			<-tick.C
+			checkLogEndpoint(debug, retryCount+1)
+			tick.Stop()
+		}
+	}()
 
 }
 
 // Sanity Check /user/<id>
-func checkUserID(debug bool) {
+func checkUserID(debug bool, retryCount int) {
+	var hadError bool
 	getBench := time.Now()
 
-	req, err := http.Get(global.Config.APIEndpoint + "users/" + global.DefaultID)
+	req, err := http.Get(global.Config.APIEndpoint + "users/" + global.TestID1)
 
 	getExecTime := time.Since(getBench)
 
 	if err != nil {
-		log.Err().Panic().Message("Sanity check: " + err.Error()).Add()
+		if retryCount == 4 {
+			logging.Err().Message("Sanity check: " + err.Error()).Add()
+			log.Fatal("Sanity check retry amount exceeded, counting as fatal.")
+		}
+		hadError = true
 	}
 
 	if debug {
-		log.Info().Message("API Endpoint HTTP GET users/<id> successful." + `
+		logging.Info().Message("API Endpoint HTTP GET users/<id> successful." + `
 	` + "\nHTTP GET Time: " + getExecTime.String() + `
 	` + "Checking if JSON response matches expected.").Add()
 	}
@@ -305,18 +353,34 @@ func checkUserID(debug bool) {
 	unmarshalExecTime := time.Since(unmarshalBench)
 
 	if err != nil {
-		log.Err().Panic().Message("Sanity check: " + err.Error()).Add()
+		if retryCount == 4 {
+			logging.Err().Message("Sanity check: " + err.Error()).Add()
+			log.Fatal("Sanity check retry amount exceeded, counting as fatal.")
+		}
+		hadError = true
 	}
 
 	if debug {
-		log.Info().Message("JSON response matches expected. /users/<id>" + `
+		logging.Info().Message("JSON response matches expected. /users/<id>" + `
 		` + "JSON Unmarshal Exec Time: " + unmarshalExecTime.String()).Add()
 	}
+
+	defer func() {
+		if hadError {
+			mult := retryCount + 1
+			baseTime := time.Duration(30 * mult)
+			tick := time.NewTimer(baseTime * time.Second)
+			<-tick.C
+			checkLogEndpoint(debug, retryCount+1)
+			tick.Stop()
+		}
+	}()
 
 }
 
 // Sanity Check /kills
-func checkKillsEndpoint(debug bool) {
+func checkKillsEndpoint(debug bool, retryCount int) {
+	var hadError bool
 
 	getBench := time.Now()
 
@@ -325,11 +389,15 @@ func checkKillsEndpoint(debug bool) {
 	getExecTime := time.Since(getBench)
 
 	if err != nil {
-		log.Err().Panic().Message("Sanity check: " + err.Error())
+		if retryCount == 4 {
+			logging.Err().Message("Sanity check: " + err.Error()).Add()
+			log.Fatal("Sanity check retry amount exceeded, counting as fatal.")
+		}
+		hadError = true
 	}
 
 	if debug {
-		log.Info().Message("API Endpoint HTTP GET /kills successful." + `
+		logging.Info().Message("API Endpoint HTTP GET /kills successful." + `
 	` + "\nHTTP GET Time: " + getExecTime.String() + `
 	` + "Checking if JSON response matches expected.").Add()
 	}
@@ -343,17 +411,33 @@ func checkKillsEndpoint(debug bool) {
 	unmarshalExecTime := time.Since(unmarshalBench)
 
 	if err != nil {
-		log.Err().Panic().Message("Sanity check: " + err.Error()).Add()
+		if retryCount == 4 {
+			logging.Err().Message("Sanity check: " + err.Error()).Add()
+			log.Fatal("Sanity check retry amount exceeded, counting as fatal.")
+		}
+		hadError = true
 	}
 
 	if debug {
-		log.Info().Message("JSON response matches expected. /kills" + `
+		logging.Info().Message("JSON response matches expected. /kills" + `
 	` + "JSON Unmarshal Exec Time: " + unmarshalExecTime.String()).Add()
 	}
+
+	defer func() {
+		if hadError {
+			mult := retryCount + 1
+			baseTime := time.Duration(30 * mult)
+			tick := time.NewTimer(baseTime * time.Second)
+			<-tick.C
+			checkLogEndpoint(debug, retryCount+1)
+			tick.Stop()
+		}
+	}()
 }
 
 // Sanity Check /deaths
-func checkDeathEndpoint(debug bool) {
+func checkDeathEndpoint(debug bool, retryCount int) {
+	var hadError bool
 
 	getBench := time.Now()
 
@@ -362,11 +446,15 @@ func checkDeathEndpoint(debug bool) {
 	getExecTime := time.Since(getBench)
 
 	if err != nil {
-		log.Err().Panic().Message("Sanity check: " + err.Error()).Add()
+		if retryCount == 4 {
+			logging.Err().Message("Sanity check: " + err.Error()).Add()
+			log.Fatal("Sanity check retry amount exceeded, counting as fatal.")
+		}
+		hadError = true
 	}
 
 	if debug {
-		log.Info().Message("API Endpoint HTTP GET /deaths successful." + `
+		logging.Info().Message("API Endpoint HTTP GET /deaths successful." + `
 	` + "\nHTTP GET Time: " + getExecTime.String() + `
 	` + "Checking if JSON response matches expected.").Add()
 	}
@@ -374,44 +462,86 @@ func checkDeathEndpoint(debug bool) {
 	var Kills []bvr.KillStruct
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
-		log.Err().Panic().Message("Sanity check: " + err.Error()).Add()
+		if retryCount == 4 {
+			logging.Err().Message("Sanity check: " + err.Error()).Add()
+			log.Fatal("Sanity check retry amount exceeded, counting as fatal.")
+		}
+		hadError = true
 	}
 
 	err = json.Unmarshal(body, &Kills)
 	if err != nil {
-		log.Err().Panic().Message("Sanity check: " + err.Error()).Add()
+		if retryCount == 4 {
+			logging.Err().Message("Sanity check: " + err.Error()).Add()
+			log.Fatal("Sanity check retry amount exceeded, counting as fatal.")
+		}
+		hadError = true
 	}
 
 	if debug {
-		log.Info().Message("JSON response matches expected. /deaths").Add()
+		logging.Info().Message("JSON response matches expected. /deaths").Add()
 	}
 
+	defer func() {
+		if hadError {
+			mult := retryCount + 1
+			baseTime := time.Duration(30 * mult)
+			tick := time.NewTimer(baseTime * time.Second)
+			<-tick.C
+			checkLogEndpoint(debug, retryCount+1)
+			tick.Stop()
+		}
+	}()
 }
 
 // Sanity Check /log/<id>
-func checkLogEndpoint(debug bool) {
+func checkLogEndpoint(debug bool, retryCount int) {
+
+	var hadError bool
+
 	getBench := time.Now()
 
-	req, err := http.Get(global.Config.APIEndpoint + "log/" + global.DefaultID)
+	req, err := http.Get(global.Config.APIEndpoint + "log/" + global.TestID1)
 
 	getExecTime := time.Since(getBench)
 
 	if err != nil {
-		log.Err().Panic().Message("Sanity check: " + err.Error()).Add()
+		if retryCount == 4 {
+			logging.Err().Message("Sanity check retries exceeded: " + err.Error()).Add()
+			log.Fatal("Sanity check retry amount exceeded, counting as fatal.")
+		}
+		hadError = true
 	}
 
 	if debug {
-		log.Info().Message("API Endpoint HTTP GET /log successful." + `
+		logging.Info().Message("API Endpoint HTTP GET /log successful." + `
 		` + "HTTP GET Time: " + getExecTime.String() + `
 		` + "Checking if TXT response matches expected.").Add()
 	}
 
 	_, err = io.ReadAll(req.Body)
 	if err != nil {
-		log.Err().Panic().Message("Sanity check: " + err.Error()).Add()
+		if retryCount == 4 {
+			logging.Err().Message("Sanity check: " + err.Error()).Add()
+			log.Fatal("Sanity check retry amount exceeded, counting as fatal.")
+		}
+
+		hadError = true
 	}
 
 	if debug {
-		log.Info().Message("TXT response received. /kills").Add()
+		logging.Info().Message("TXT response received. /kills").Add()
+
 	}
+
+	defer func() {
+		if hadError {
+			mult := retryCount + 1
+			baseTime := time.Duration(30 * mult)
+			tick := time.NewTimer(baseTime * time.Second)
+			<-tick.C
+			checkLogEndpoint(debug, retryCount+1)
+			tick.Stop()
+		}
+	}()
 }

@@ -3,7 +3,6 @@ package logger
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"time"
 
@@ -19,7 +18,6 @@ type logEntry struct {
 type Log struct {
 	entry logEntry
 	alert bool
-	panic bool
 }
 
 func (l *Log) Update() *Log {
@@ -44,11 +42,6 @@ func (l *Log) Err() *Log {
 
 func (l *Log) Fatal() *Log {
 	l.entry.level = "FATAL"
-	return l
-}
-
-func (l *Log) Panic() *Log {
-	l.panic = true
 	return l
 }
 
@@ -91,9 +84,6 @@ func (l *Log) Add() {
 	}
 	if l.alert {
 		l.sendAlert()
-	}
-	if l.panic {
-		log.Panic(l.entry.message)
 	}
 
 }

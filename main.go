@@ -10,6 +10,7 @@ import (
 	"github.com/angelfluffyookami/247BVR/modules/common/global"
 	"github.com/angelfluffyookami/247BVR/modules/common/utils/database"
 	"github.com/angelfluffyookami/247BVR/modules/common/utils/database/globaldb"
+	"github.com/angelfluffyookami/247BVR/modules/test"
 
 	discord_session "github.com/angelfluffyookami/247BVR/modules/session"
 	"github.com/bwmarrin/discordgo"
@@ -67,7 +68,9 @@ func init() {
 	global.Config = config
 	sanityCheck()
 
-	bvr.InitCache()
+	go bvr.InitCache()
+	<-bvr.InitDone
+	test.Test()
 
 	/*
 	*	Database gets initialized, returning the DB engine to the variable DB, which then gets written to common.DB, for other

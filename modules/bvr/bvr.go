@@ -9,6 +9,10 @@ import (
 	"github.com/angelfluffyookami/247BVR/modules/common/utils/logger"
 )
 
+var firstBootDone bool
+
+var InitDone = make(chan bool)
+
 var logging = logger.Log{}
 
 var PauseCache = make(chan bool)
@@ -17,18 +21,24 @@ func InitCache() {
 
 	tick := time.NewTicker(2 * time.Minute)
 
-	select {
-	case <-tick.C:
-		syncCache()
-	case pause := <-PauseCache:
-		for pause {
-			pause = <-PauseCache
+	for {
+		select {
+		case <-tick.C:
+			syncCache()
+		case pause := <-PauseCache:
+			switch pause {
+			case true:
+				tick.Stop()
+			case false:
+				tick.Reset(2 * time.Minute)
+			}
 		}
 	}
 
 }
 
 func syncCache() {
+	PauseCache <- true
 
 	go syncKills(0)
 	go syncUsers(0)
@@ -37,13 +47,17 @@ func syncCache() {
 
 }
 
+var killSyncDone = make(chan bool)
+var deathSyncDone = make(chan bool)
+var userSyncDone = make(chan bool)
+
 func syncKills(retryCount int64) {
 	var hadError bool
 
 	req, err := http.Get(global.Config.APIEndpoint + "/kills")
 
 	if err != nil {
-		if retryCount == 5 {
+		if retryCount == 4 {
 			PauseCache <- true
 			logging.Err().Alert().Message("HTTP GET request error retryCount exceeded for: /kills. Is server up? Cache refresh paused until heartbeat detected. Further charts will be generated with last server snapshot.").Add()
 		}
@@ -52,7 +66,7 @@ func syncKills(retryCount int64) {
 
 	err = json.NewDecoder(req.Body).Decode(&Cache.Kills.Kills)
 	if err != nil {
-		if retryCount == 5 {
+		if retryCount == 4 {
 			logging.Err().Alert().Message("JSON Unmarshal error retryCount exceeded for: /kills. Are API definitions up to date? Cache refresh paused until heartbeat detected. Further charts will be generated with last server snapshot.")
 		}
 		hadError = true
@@ -71,6 +85,10 @@ func syncKills(retryCount int64) {
 		}
 	}()
 
+	if !hadError {
+		killSyncDone <- true
+
+	}
 }
 
 func syncUsers(retryCount int64) {
@@ -79,7 +97,7 @@ func syncUsers(retryCount int64) {
 	req, err := http.Get(global.Config.APIEndpoint + "/users")
 
 	if err != nil {
-		if retryCount == 5 {
+		if retryCount == 4 {
 			PauseCache <- true
 			logging.Err().Alert().Message("HTTP GET request error retryCount exceeded for: /users. Is server up? Cache refresh paused until heartbeat detected. Further charts will be generated with last server snapshot.").Add()
 		}
@@ -88,7 +106,7 @@ func syncUsers(retryCount int64) {
 
 	err = json.NewDecoder(req.Body).Decode(&Cache.Users.Users)
 	if err != nil {
-		if retryCount == 5 {
+		if retryCount == 4 {
 			logging.Err().Alert().Message("JSON Unmarshal error retryCount exceeded for: /users. Are API definitions up to date? Cache refresh paused until heartbeat detected. Further charts will be generated with last server snapshot.")
 		}
 		hadError = true
@@ -106,6 +124,11 @@ func syncUsers(retryCount int64) {
 			tick.Stop()
 		}
 	}()
+
+	if !hadError {
+		<-killSyncDone
+		userSyncDone <- true
+	}
 }
 
 func syncDeaths(retryCount int64) {
@@ -114,7 +137,7 @@ func syncDeaths(retryCount int64) {
 	req, err := http.Get(global.Config.APIEndpoint + "/deaths")
 
 	if err != nil {
-		if retryCount == 5 {
+		if retryCount == 4 {
 			PauseCache <- true
 			logging.Err().Alert().Message("HTTP GET request error retryCount exceeded for: /deaths. Is server up? Cache refresh paused until heartbeat detected. Further charts will be generated with last server snapshot.").Add()
 		}
@@ -123,7 +146,7 @@ func syncDeaths(retryCount int64) {
 
 	err = json.NewDecoder(req.Body).Decode(&Cache.Deaths.Deaths)
 	if err != nil {
-		if retryCount == 5 {
+		if retryCount == 4 {
 			logging.Err().Alert().Message("JSON Unmarshal error retryCount exceeded for: /deaths. Are API definitions up to date? Cache refresh paused until heartbeat detected. Further charts will be generated with last server snapshot.")
 		}
 		hadError = true
@@ -141,6 +164,12 @@ func syncDeaths(retryCount int64) {
 			tick.Stop()
 		}
 	}()
+
+	if !hadError {
+		<-userSyncDone
+		deathSyncDone <- true
+	}
+
 }
 
 func syncOnline(retryCount int64) {
@@ -149,7 +178,7 @@ func syncOnline(retryCount int64) {
 	req, err := http.Get(global.Config.APIEndpoint + "/online")
 
 	if err != nil {
-		if retryCount == 5 {
+		if retryCount == 4 {
 			PauseCache <- true
 			logging.Err().Alert().Message("HTTP GET request error retryCount exceeded for: /online. Is server up? Cache refresh paused until heartbeat detected. Further charts will be generated with last server snapshot.").Add()
 		}
@@ -158,7 +187,7 @@ func syncOnline(retryCount int64) {
 
 	err = json.NewDecoder(req.Body).Decode(&Cache.Online.Online)
 	if err != nil {
-		if retryCount == 5 {
+		if retryCount == 4 {
 			logging.Err().Alert().Message("JSON Unmarshal error retryCount exceeded for: /online. Are API definitions up to date? Cache refresh paused until heartbeat detected. Further charts will be generated with last server snapshot.")
 		}
 		hadError = true
@@ -176,4 +205,12 @@ func syncOnline(retryCount int64) {
 			tick.Stop()
 		}
 	}()
+	if !hadError {
+		<-deathSyncDone
+		PauseCache <- false
+		if !firstBootDone {
+			firstBootDone = true
+			InitDone <- true
+		}
+	}
 }
