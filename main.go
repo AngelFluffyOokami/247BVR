@@ -6,6 +6,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/angelfluffyookami/247BVR/modules/bvr"
 	"github.com/angelfluffyookami/247BVR/modules/common/global"
 	"github.com/angelfluffyookami/247BVR/modules/common/utils/database"
 	"github.com/angelfluffyookami/247BVR/modules/common/utils/database/globaldb"
@@ -65,6 +66,8 @@ func init() {
 	 */
 	global.Config = config
 	sanityCheck()
+
+	bvr.InitCache()
 
 	/*
 	*	Database gets initialized, returning the DB engine to the variable DB, which then gets written to common.DB, for other

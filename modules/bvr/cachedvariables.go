@@ -1,9 +1,29 @@
 package bvr
 
-var Users []UserStruct
+import "time"
 
-var Kills []KillStruct
+var Cache CacheStruct
 
-var Deaths []DeathStruct
+type CacheStruct struct {
+	Kills  KillsStruct
+	Users  UsersStruct
+	Deaths DeathsStruct
+	Online OnlinesStruct
+}
 
-var Online OnlineStruct
+type KillsStruct struct {
+	Kills     []KillStruct
+	Timestamp time.Time
+}
+type UsersStruct struct {
+	Users     []UserStruct
+	Timestamp time.Time
+}
+type DeathsStruct struct {
+	Deaths    []DeathStruct
+	Timestamp time.Time
+}
+type OnlinesStruct struct {
+	Online    []OnlineStruct
+	Timestamp time.Time
+}
