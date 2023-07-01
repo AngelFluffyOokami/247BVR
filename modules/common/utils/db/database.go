@@ -1,7 +1,6 @@
 package database
 
 import (
-	coredb "github.com/angelfluffyookami/247BVR/modules/db/core_models"
 	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"
 )

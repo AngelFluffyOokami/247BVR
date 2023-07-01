@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/angelfluffyookami/247BVR/modules/common"
+	"github.com/angelfluffyookami/247BVR/modules/common/global"
 	"github.com/angelfluffyookami/247BVR/modules/common/utils/logger"
 	"github.com/bwmarrin/discordgo"
 	"github.com/goccy/go-json"
@@ -280,7 +281,7 @@ func checkUsersEndpoint(debug bool) {
 func checkUserID(debug bool) {
 	getBench := time.Now()
 
-	req, err := http.Get(common.Config.APIEndpoint + "users/" + common.DefaultID)
+	req, err := http.Get(common.Config.APIEndpoint + "users/" + global.DefaultID)
 
 	getExecTime := time.Since(getBench)
 
@@ -390,7 +391,7 @@ func checkDeathEndpoint(debug bool) {
 func checkLogEndpoint(debug bool) {
 	getBench := time.Now()
 
-	req, err := http.Get(common.Config.APIEndpoint + "log/" + common.DefaultID)
+	req, err := http.Get(common.Config.APIEndpoint + "log/" + global.DefaultID)
 
 	getExecTime := time.Since(getBench)
 

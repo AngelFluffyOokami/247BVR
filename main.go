@@ -8,7 +8,8 @@ import (
 
 	"github.com/angelfluffyookami/247BVR/modules/common"
 	"github.com/angelfluffyookami/247BVR/modules/common/global"
-	database "github.com/angelfluffyookami/247BVR/modules/db"
+	"github.com/angelfluffyookami/247BVR/modules/common/utils/db/globaldb"
+
 	discord_session "github.com/angelfluffyookami/247BVR/modules/session"
 	"github.com/bwmarrin/discordgo"
 	"gorm.io/gorm"
@@ -73,7 +74,7 @@ func init() {
 	* 	modules to access without causing circular dependency import by attempting to use session from main package.
 	 */
 	DB = database.InitDB()
-	common.DBLoop(DB)
+	globaldb.DBLoop(DB)
 	s = discord_session.InitSession(config.Token)
 	global.Session = s
 	common.Config.ActiveSession = true
