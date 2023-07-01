@@ -26,8 +26,6 @@ func RecoverPanic(channelID string) {
 		}
 		runtime.Stack(buf, false)
 
-		log := logger.Log{}
-
 		log.Fatal().Message(fmt.Sprintf("Recovering from panic: %v\n Stack trace: %s", r, buf)).Alert().Add()
 		if channelID != "" {
 			s.ChannelMessageSend(channelID, "Error processing command.\nBug report sent to developers.")
@@ -36,3 +34,5 @@ func RecoverPanic(channelID string) {
 	}
 
 }
+
+var log = logger.Log{}

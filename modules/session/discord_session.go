@@ -3,7 +3,7 @@ package discord_session
 import (
 	"log"
 
-	"github.com/angelfluffyookami/247BVR/modules/common"
+	"github.com/angelfluffyookami/247BVR/modules/common/global"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -27,7 +27,7 @@ func InitSession(disToken string) *discordgo.Session {
 		panic(err)
 	}
 
-	common.Session = s
+	global.Session = s
 	return s
 
 }

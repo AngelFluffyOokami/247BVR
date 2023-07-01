@@ -7,6 +7,7 @@ import (
 	"syscall"
 
 	"github.com/angelfluffyookami/247BVR/modules/common"
+	"github.com/angelfluffyookami/247BVR/modules/common/global"
 	database "github.com/angelfluffyookami/247BVR/modules/db"
 	discord_session "github.com/angelfluffyookami/247BVR/modules/session"
 	"github.com/bwmarrin/discordgo"
@@ -74,7 +75,7 @@ func init() {
 	DB = database.InitDB()
 	common.DBLoop(DB)
 	s = discord_session.InitSession(config.Token)
-	common.Session = s
+	global.Session = s
 	common.Config.ActiveSession = true
 
 }
