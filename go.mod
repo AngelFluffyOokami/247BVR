@@ -5,16 +5,14 @@ go 1.19
 require (
 	github.com/bwmarrin/discordgo v0.27.0
 	github.com/glebarez/sqlite v1.6.0
+	github.com/go-echarts/go-echarts/v2 v2.2.6
+	github.com/goccy/go-json v0.10.2
 	github.com/tjarratt/babble v0.0.0-20210505082055-cbca2a4833c1
 	gorm.io/gorm v1.24.5
 )
 
 require (
-	github.com/francoispqt/gojay v1.2.13 // indirect
 	github.com/glebarez/go-sqlite v1.20.0 // indirect
-	github.com/go-echarts/go-echarts v1.0.0 // indirect
-	github.com/go-echarts/go-echarts/v2 v2.2.6 // indirect
-	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
