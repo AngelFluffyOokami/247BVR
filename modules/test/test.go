@@ -5,31 +5,32 @@ import (
 
 	"github.com/angelfluffyookami/247BVR/modules/bvr"
 	"github.com/angelfluffyookami/247BVR/modules/common/global"
-	"github.com/google/go-cmp/cmp"
 )
 
 func Test() {
 
-	var User1 bvr.UserStruct
-	var User2 bvr.UserStruct
-	var User3 bvr.UserStruct
-	var User4 bvr.UserStruct
-	for _, x := range bvr.Cache.Users.Users {
+	User1, err := bvr.GetUserByID(global.TestID1)
 
-		switch x.ID {
-		case global.TestID1:
-			User1 = x
-		case global.TestID2:
-			User2 = x
-		case global.TestID3:
-			User3 = x
-		case global.TestID4:
-			User4 = x
-		}
+	if err != nil {
+		return
+	}
 
-		if !cmp.Equal(User1, bvr.UserStruct{}) && !cmp.Equal(User2, bvr.UserStruct{}) && !cmp.Equal(User3, bvr.UserStruct{}) && cmp.Equal(User4, bvr.UserStruct{}) {
-			break
-		}
+	User2, err := bvr.GetUserByID(global.TestID2)
+
+	if err != nil {
+		return
+	}
+
+	User3, err := bvr.GetUserByID(global.TestID3)
+
+	if err != nil {
+		return
+	}
+
+	User4, err := bvr.GetUserByID(global.TestID4)
+
+	if err != nil {
+		return
 	}
 
 	fmt.Println("U1LI: " + fmt.Sprint(len(User1.LoginTimes)) + " U1LO: " + fmt.Sprint(len(User1.LogoutTimes)) + `

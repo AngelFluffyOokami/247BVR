@@ -312,12 +312,12 @@ func checkUsersEndpoint(debug bool, retryCount int) {
 
 	defer func() {
 		if hadError {
-			logging.Err().Message("/user sanity check fail, retrying.").Add()
+			logging.Err().Message("/users sanity check fail, retrying.").Add()
 			mult := retryCount + 1
 			baseTime := time.Duration(30 * mult)
 			tick := time.NewTimer(baseTime * time.Second)
 			<-tick.C
-			checkLogEndpoint(debug, retryCount+1)
+			checkUsersEndpoint(debug, retryCount+1)
 			tick.Stop()
 		}
 	}()
@@ -375,7 +375,7 @@ func checkUserID(debug bool, retryCount int) {
 			baseTime := time.Duration(30 * mult)
 			tick := time.NewTimer(baseTime * time.Second)
 			<-tick.C
-			checkLogEndpoint(debug, retryCount+1)
+			checkUserID(debug, retryCount+1)
 			tick.Stop()
 		}
 	}()
@@ -434,7 +434,7 @@ func checkKillsEndpoint(debug bool, retryCount int) {
 			baseTime := time.Duration(30 * mult)
 			tick := time.NewTimer(baseTime * time.Second)
 			<-tick.C
-			checkLogEndpoint(debug, retryCount+1)
+			checkKillsEndpoint(debug, retryCount+1)
 			tick.Stop()
 		}
 	}()
@@ -494,7 +494,7 @@ func checkDeathEndpoint(debug bool, retryCount int) {
 			baseTime := time.Duration(30 * mult)
 			tick := time.NewTimer(baseTime * time.Second)
 			<-tick.C
-			checkLogEndpoint(debug, retryCount+1)
+			checkDeathEndpoint(debug, retryCount+1)
 			tick.Stop()
 		}
 	}()
