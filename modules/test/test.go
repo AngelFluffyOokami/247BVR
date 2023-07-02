@@ -36,11 +36,12 @@ func Test() {
 
 	var User1Kills []bvr.KillStruct
 	for _, x := range bvr.Cache.Kills.Kills {
+		for _, y := range x.Killer.Occupants {
+			if y == User1.ID {
 
-		if x.KillerID == User1.ID {
+				User1Kills = append(User1Kills, x)
 
-			User1Kills = append(User1Kills, x)
-
+			}
 		}
 
 	}
@@ -49,8 +50,12 @@ func Test() {
 
 	for _, x := range bvr.Cache.Deaths.Deaths {
 
-		if x.VictimID == User1.ID {
-			User1Deaths = append(User1Deaths, x)
+		for _, y := range x.Victim.Occupants {
+			if y == User1.ID {
+
+				User1Deaths = append(User1Deaths, x)
+
+			}
 		}
 	}
 

@@ -1,3 +1,5 @@
+//Document for self reference.
+
 Kill JSON structure:
 
 _id         string
@@ -29,6 +31,29 @@ velocity    ???
 
 serverInfo:
 
-missionId string
+missionId   string
 onlineUsers []Online
-timeOfDay int
+timeOfDay   int
+
+Death JSON Structure:
+
+id          uuid
+victim      victim
+season      int
+time        int64
+serverInfo  serverInfo
+
+victim:
+
+ownerId     string
+occupants   []string
+type        int
+team        int
+position    ???
+velocity    ???
+
+serverInfo:
+
+missionId   string
+onlineUsers []Online
+timeOfDay   int

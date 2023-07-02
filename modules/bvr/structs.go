@@ -8,7 +8,7 @@ type AircraftStruct struct {
 	Invalid int
 }
 
-var Aircraft = AircraftStruct{
+var AircraftConst = AircraftStruct{
 	AV42c:   1,
 	FA26b:   2,
 	F45A:    3,
@@ -28,7 +28,7 @@ type WeaponStruct struct {
 	Invalid int
 }
 
-var Weapon = WeaponStruct{
+var WeaponConst = WeaponStruct{
 	Gun:     1,
 	AIM120:  2,
 	AIM9:    3,
@@ -46,70 +46,101 @@ type TeamStruct struct {
 	Invalid int
 }
 
-var Team = TeamStruct{
+var TeamConst = TeamStruct{
 	Allied:  1,
 	Enemy:   2,
 	Invalid: 0,
 }
 
 type OnlineStruct struct {
-	Name string `json:"name"`
-	ID   string `json:"id"`
-	Team string `json:"team"`
+	Name string `json:"name,omitempty"`
+	ID   string `json:"id,omitempty"`
+	Team string `json:"team,omitempty"`
 }
 
 type KillStruct struct {
-	KillerID       string `json:"killerId,omitempty"`
-	VictimID       string `json:"victimId,omitempty"`
-	VictimTeam     int    `json:"victimTeam,omitempty"`
-	KillerTeam     int    `json:"killerTeam,omitempty"`
-	Time           int64  `json:"time,omitempty"`
-	KillerAircraft int    `json:"killerAircraft,omitempty"`
-	VictimAircraft int    `json:"victimAircraft,omitempty"`
-	Weapon         int    `json:"weapon,omitempty"`
-	ID             string `json:"id,omitempty"`
+	ID string `json:"id,omitempty"`
+
+	Killer       KillerStruct     `json:"killer,omitempty"`
+	VictimStruct VictimStruct     `json:"victim,omitempty"`
+	ServerInfo   ServerInfoStruct `json:"serverInfo,omitempty"`
+
+	Time int64 `json:"time,omitempty"`
 }
 
+type ServerInfoStruct struct {
+	MissionID   string         `json:"missionId,omitempty"`
+	OnlineUsers []OnlineStruct `json:"onlineUsers,omitempty"`
+	TimeOfDay   int            `json:"timeOfDay,omitempty"`
+}
+
+type KillerStruct struct {
+	OwnerID      string   `json:"ownerId,omitempty"`
+	Occupants    []string `json:"occupants,omitempty"`
+	AircraftType int      `json:"type,omitempty"`
+	Team         int      `json:"team,omitempty"`
+}
+
+type VictimStruct struct {
+	OwnerID      string   `json:"ownerId,omitempty"`
+	Occupants    []string `json:"occupants,omitempty"`
+	AircraftType int      `json:"type,omitempty"`
+	Team         int      `json:"team,omitempty"`
+}
 type DeathStruct struct {
-	VictimID       string
-	Time           int64
-	VictimAircraft int
-	ID             string
+	ID string `json:"id,omitempty"`
+
+	Season     int              `json:"season,omitempty"`
+	ServerInfo ServerInfoStruct `json:"serverInfo,omitempty"`
+	Victim     VictimStruct     `json:"victim,omitempty"`
+
+	Time int64 `json:"Time"`
 }
 
 type LimitedUserDataStruct struct {
-	ID         string   `json:"id"`
-	PilotNames []string `gorm:"serializer:json" json:"pilotNames"`
-	Kill       int      `json:"kills"`
-	Deaths     int      `json:"deaths"`
-	ELO        float64  `json:"elo"`
-	Rank       int      `json:"rank"`
+	ID         string   `json:"id,omitempty"`
+	PilotNames []string `json:"pilotNames,omitempty"`
+	Kill       int      `json:"kills,omitempty"`
+	Deaths     int      `json:"deaths,omitempty"`
+	ELO        float64  `json:"elo,omitempty"`
+	Rank       int      `json:"rank,omitempty"`
 }
 
 type UserStruct struct {
 	UID         string
-	ID          string             `json:"id"`
-	PilotNames  []string           `gorm:"serializer:json" json:"pilotNames"`
-	LoginTimes  []int64            `gorm:"serializer:json" json:"loginTimes"`
-	LogoutTimes []int64            `gorm:"serializer:json" json:"logoutTimes"`
-	Kills       int                `json:"kills"`
-	Deaths      int                `json:"deaths"`
-	Spawns      SpawnStruct        `gorm:"serializer:json" json:"spawns"`
-	ELO         float64            `json:"elo"`
-	ELOHistory  []ELOHistoryStruct `gorm:"serializer:json" json:"eloHistory"`
-	Rank        int                `json:"rank"`
+	ID          string             `json:"id,omitempty"`
+	PilotNames  []string           `json:"pilotNames,omitempty"`
+	LoginTimes  []int64            `json:"loginTimes,omitempty"`
+	LogoutTimes []int64            `json:"logoutTimes,omitempty"`
+	Kills       int                `json:"kills,omitempty"`
+	Deaths      int                `json:"deaths,omitempty"`
+	TeamKills   int                `json:"teamKills,omitempty"`
+	Banned      bool               `json:"isBanned,omitempty"`
+	DiscordID   string             `json:"discordId,omitempty"`
+	Spawns      SpawnStruct        `json:"spawns,omitempty"`
+	ELO         float64            `json:"elo,omitempty"`
+	ELOHistory  []ELOHistoryStruct `json:"eloHistory,omitempty"`
+	Rank        int                `json:"rank,omitempty"`
 }
 
 type ELOHistoryStruct struct {
-	ELO  float64 `json:"elo"`
-	Time int64   `json:"time"`
+	ELO  float64 `json:"elo,omitempty"`
+	Time int64   `json:"time,omitempty"`
 }
 
 type SpawnStruct struct {
-	AV42c   int `json:"0"`
-	F26b    int `json:"1"`
-	F45A    int `json:"2"`
-	AH94    int `json:"3"`
-	T55     int `json:"4"`
-	Invalid int `json:"5"`
+	AV42c   int `json:"0,omitempty"`
+	F26b    int `json:"1,omitempty"`
+	F45A    int `json:"2,omitempty"`
+	AH94    int `json:"3,omitempty"`
+	T55     int `json:"4,omitempty"`
+	Invalid int `json:"5,omitempty"`
+}
+
+type EndOfSeasonStruct struct {
+	Season    int     `json:"season,omitempty"`
+	ELO       float64 `json:"elo,omitempty"`
+	Rank      int     `json:"rank,omitempty"`
+	TeamKills int     `json:"teamKills,omitempty"`
+	History   string  `json:"history,omitempty"`
 }
