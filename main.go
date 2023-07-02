@@ -67,9 +67,6 @@ func init() {
 	 */
 	global.Config = config
 
-	// Sanity check commented out due to not being needed no more.
-	// sanityCheck()
-
 	go bvr.InitCache()
 	<-bvr.InitDone
 	test.Test()
