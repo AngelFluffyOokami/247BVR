@@ -7,7 +7,6 @@ require (
 	github.com/glebarez/sqlite v1.6.0
 	github.com/go-echarts/go-echarts/v2 v2.2.6
 	github.com/goccy/go-json v0.10.2
-	github.com/google/go-cmp v0.5.9
 	github.com/tjarratt/babble v0.0.0-20210505082055-cbca2a4833c1
 	gorm.io/gorm v1.24.5
 )
