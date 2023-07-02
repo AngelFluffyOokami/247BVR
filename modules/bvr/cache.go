@@ -2,6 +2,7 @@ package bvr
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -18,6 +19,8 @@ var logging = logger.Log{}
 var PauseCache = make(chan bool)
 
 func InitCache() {
+
+	go syncCache()
 
 	tick := time.NewTicker(2 * time.Minute)
 
@@ -65,7 +68,11 @@ func syncKills(retryCount int64) {
 		return
 	}
 
+	TimeMark := time.Now()
+
 	err = json.NewDecoder(req.Body).Decode(&Cache.Kills.Kills)
+	TimeSince := time.Since(TimeMark)
+	fmt.Println("Unmarshal Exec Time: " + TimeSince.String())
 	if err != nil {
 		if retryCount == 4 {
 			logging.Err().Alert().Message("JSON Unmarshal error retryCount exceeded for: /kills. Are API definitions up to date? Cache refresh paused until heartbeat detected. Further charts will be generated with last server snapshot.")

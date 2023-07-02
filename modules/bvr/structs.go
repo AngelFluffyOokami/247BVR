@@ -69,9 +69,9 @@ type KillStruct struct {
 }
 
 type ServerInfoStruct struct {
-	MissionID   string         `json:"missionId,omitempty"`
-	OnlineUsers []OnlineStruct `json:"onlineUsers,omitempty"`
-	TimeOfDay   int            `json:"timeOfDay,omitempty"`
+	MissionID   string   `json:"missionId,omitempty"`
+	OnlineUsers []string `json:"onlineUsers,omitempty"`
+	TimeOfDay   int      `json:"timeOfDay,omitempty"`
 }
 
 type KillerStruct struct {

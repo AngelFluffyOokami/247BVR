@@ -59,13 +59,15 @@ func Test() {
 		}
 	}
 
-	var UserActivity []int64
+	var UserActivity logslice
 	for _, x := range User1Kills {
 		UserActivity = append(UserActivity, x.Time)
 	}
 	for _, x := range User1Deaths {
 		UserActivity = append(UserActivity, x.Time)
 	}
+
+	sort.Sort(UserActivity)
 
 	fmt.Println("U1LI: " + fmt.Sprint(len(User1.LoginTimes)) + " U1LO: " + fmt.Sprint(len(User1.LogoutTimes)) + `
 ` + "U2LI: " + fmt.Sprint(len(User2.LoginTimes)) + " U2LO: " + fmt.Sprint(len(User2.LogoutTimes)) + `
@@ -127,7 +129,6 @@ func Test() {
 						continue
 					}
 					if z >= logType[x-1].timestamp {
-						logouts = append(logouts, UserActivity[q-1])
 						break
 					}
 				}
@@ -186,11 +187,11 @@ func Test() {
 
 			switch y.login {
 			case true:
-				fmt.Println(fmt.Sprint(x-1) + " missing logout")
+				fmt.Println(fmt.Sprint(x-1) + " still missing logout")
 				missingPairIndex = append(missingPairIndex, x-1)
 
 			case false:
-				fmt.Println(fmt.Sprint(x-1) + " missing login")
+				fmt.Println(fmt.Sprint(x-1) + " still missing login")
 				missingPairIndex = append(missingPairIndex, x-1)
 			}
 		} else {
