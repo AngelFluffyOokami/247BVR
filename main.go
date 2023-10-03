@@ -10,6 +10,7 @@ import (
 	"github.com/angelfluffyookami/247BVR/modules/common/global"
 	"github.com/angelfluffyookami/247BVR/modules/common/utils/database"
 	"github.com/angelfluffyookami/247BVR/modules/common/utils/database/globaldb"
+	wshandler "github.com/angelfluffyookami/247BVR/modules/common/websocket"
 	"github.com/angelfluffyookami/247BVR/modules/test"
 
 	discord_session "github.com/angelfluffyookami/247BVR/modules/session"
@@ -45,6 +46,18 @@ var off = make(chan bool)
 var err error
 
 func init() {
+
+	go wshandler.WsConn()
+
+	go func() {
+		for {
+
+			msg := <-wshandler.WsRead
+
+			fmt.Println(string(msg))
+
+		}
+	}()
 	/*
 	*	CreateOrUpdateJSON() creates a json configuration file if not exists, if exists and doesn't have all the configuration options,
 	*	it updates the file to contain the missing config options, leaving the rest untouched in their state.
