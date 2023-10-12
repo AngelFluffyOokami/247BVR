@@ -23,7 +23,7 @@ const (
 )
 
 // Function reads json file, returning variable of type config.Data
-func ReadJSON(filename string) (global.Data, error) {
+func readJSON(filename string) (global.Data, error) {
 	//	Reads file and saves []byte to variable data, then checks if there was an error, if error, then return nil config and error.
 	data, err := os.ReadFile(filename)
 	if err != nil {

@@ -19,7 +19,8 @@ import (
 )
 
 var s *discordgo.Session
-var DB *gorm.DB
+
+var db *gorm.DB
 
 /*
 * 	These maps are created for any module added using a build tag to add their functions upon init()
@@ -31,7 +32,7 @@ var DB *gorm.DB
  */
 var allCommandHandlers = make(map[string]func(i *discordgo.InteractionCreate))
 var allCommands []discordgo.ApplicationCommand
-var DBMigrate []func()
+var dbMigrate []func()
 
 /*
 *	Variable config created to populate it with the info fetched from the configuration json file.
@@ -47,17 +48,10 @@ var err error
 
 func init() {
 
-	go wshandler.WsConn()
+	var Websocket = wshandler.NewConnection("wss://hs.vtolvr.live/")
 
-	go func() {
-		for {
+	Websocket.Subscribe(Websocket.Subscriptions.All())
 
-			msg := <-wshandler.WsRead
-
-			fmt.Println(string(msg))
-
-		}
-	}()
 	/*
 	*	CreateOrUpdateJSON() creates a json configuration file if not exists, if exists and doesn't have all the configuration options,
 	*	it updates the file to contain the missing config options, leaving the rest untouched in their state.
@@ -68,7 +62,7 @@ func init() {
 	 */
 	CreateOrUpdateJSON("config.json")
 	beautifyJSONFile("config.json")
-	config, err = ReadJSON("config.json")
+	config, err = readJSON("config.json")
 
 	if err != nil {
 		panic(err)
@@ -91,8 +85,8 @@ func init() {
 	*	Discord session gets initialized then returns the session to variable s, which proceeds to get written to common.Session for other
 	* 	modules to access without causing circular dependency import by attempting to use session from main package.
 	 */
-	DB = database.InitDB()
-	globaldb.DBLoop(DB)
+	db = database.InitDB()
+	globaldb.DBLoop(db)
 	s = discord_session.InitSession(config.Token)
 	global.Session = s
 	global.Config.ActiveSession = true
@@ -103,7 +97,7 @@ func main() {
 
 	//	iterate over DBMigrate function and run every function containing the DB automigrate function for every module.
 
-	for _, x := range DBMigrate {
+	for _, x := range dbMigrate {
 		x()
 	}
 

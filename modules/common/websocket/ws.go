@@ -1,114 +1,129 @@
 package wshandler
 
 import (
+	"context"
 	"encoding/json"
-	"log"
-	"net/url"
-	"sync"
-	"time"
+	"fmt"
+	"io"
 
-	"github.com/gorilla/websocket"
+	"github.com/google/uuid"
+	"nhooyr.io/websocket"
+	"nhooyr.io/websocket/wsjson"
 )
 
-var WsWriteChan = make(chan WsWriteStruct)
+// CloseWS ... Closes Websocket connection
 
-var WsWrite = WsWriteMuWrapper{
-	WsWrite: make(chan WsWriteStruct),
-}
+// NewConnection ... Connect to HS WSS Websocket
 
-type WsWriteMuWrapper struct {
-	WsWrite chan WsWriteStruct
-	Mu      sync.Mutex
-}
+func (ctx *Ws) startWsConnection() {
 
-type WsWriteStruct struct {
-	WsMsg     []byte
-	WsMsgType int
-}
-
-var WsRead = make(chan []byte)
-
-var ping struct {
-	WsType string `json:"type"`
-	Id     string `json:"pid"`
-}
-var pong struct {
-	WsType string `json:"type"`
-	Id     string `json:"pid"`
-}
-
-func WsConn() {
-
-	u := url.URL{Scheme: "wss", Host: "hs.vtolvr.live", Path: "/"}
-	log.Printf("connecting to %s", u.String())
-
-	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
+	var cancel context.CancelFunc
+	ctx.Con = context.Background()
+	defer cancel()
+	var err error
+	ctx.C, _, err = websocket.Dial(ctx.Con, ctx.URI, nil)
 	if err != nil {
-		log.Fatal("dial:", err)
+		// ...
 	}
-	defer c.Close()
-	done := make(chan struct{})
+	defer ctx.C.Close(websocket.StatusInternalError, "the sky is falling")
 
-	go func() {
-		defer close(done)
-		for {
-			_, message, err := c.ReadMessage()
-			if err != nil {
-				panic(err)
-			}
+	go ctx.wsReader()
 
-			Ping := ping
+	ctx.wg.Done()
 
-			err = json.Unmarshal(message, &Ping)
-			if err == nil {
-				Pong := pong
-				Pong.Id = Ping.Id
-				Pong.WsType = Ping.WsType
-				PongByte, err := json.Marshal(Pong)
-				if err != nil {
-					panic(err)
-				}
+	<-ctx.CloseWS
+	ctx.C.Close(websocket.StatusNormalClosure, "Client going offline.")
+}
 
-				WsWrite.Mu.Lock()
-				WsWrite.WsWrite <- WsWriteStruct{WsMsg: PongByte, WsMsgType: websocket.PongMessage}
+// NewConnection todo
+func NewConnection(URI string) *Ws {
 
-			}
+	var ctx Ws
+	ctx.URI = URI
+	ctx.wg.Add(1)
+	go ctx.startWsConnection()
+	ctx.wg.Wait()
+	return &ctx
 
-			WsRead <- message
-			if err != nil {
-				log.Println("read:", err)
-				return
-			}
-			log.Printf("recv: %s", message)
-		}
-	}()
+}
 
-	go func() {
-		defer close(done)
-		for {
-			WsMsg := <-WsWrite.WsWrite
-			err = c.WriteMessage(WsMsg.WsMsgType, WsMsg.WsMsg)
-			if err != nil {
-				panic(err)
-			}
-			WsWrite.Mu.Unlock()
-		}
-	}()
+// QueryByID todo
+func (ctx *Ws) QueryByID(Type string, ID string) {
 
-	ticker := time.NewTicker(time.Second)
-	defer ticker.Stop()
+	newLookup := LookupData{
+		ID:   ID,
+		Type: Type,
+	}
+
+	newMessage := WsMessage{
+		Type: ctx.LookupType(),
+		Data: newLookup,
+		Pid:  uuid.NewString(),
+	}
+
+	wsjson.Write(ctx.Con, ctx.C, newMessage)
+
+}
+
+// Subscribe todo
+func (ctx *Ws) Subscribe(Type []string) {
+
+	newMessage := WsMessage{
+		Type: ctx.subscribeType(),
+		Data: ctx.Subscriptions.All(),
+		Pid:  uuid.NewString(),
+	}
+
+	err := wsjson.Write(ctx.Con, ctx.C, newMessage)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+}
+
+// WriteMessage todo
+func (ctx *Ws) WriteMessage(v any) {
+
+}
+
+func (ctx *Ws) wsReader() {
 
 	for {
-		select {
-		case <-done:
-			return
-		case t := <-ticker.C:
-			err := c.WriteMessage(websocket.TextMessage, []byte(t.String()))
-			if err != nil {
-				log.Println("write:", err)
-				return
-			}
+		_, wsMsgByte, err := ctx.C.Reader(ctx.Con)
 
+		if err != nil {
+			fmt.Println(err.Error())
+			continue
 		}
+
+		buffer := make([]byte, 1024)
+		var message string
+		for {
+			count, err := wsMsgByte.Read(buffer)
+			if count > 0 {
+				message = string(buffer[:count])
+				if ctx.last == message {
+					break
+				}
+				ctx.last = message
+
+				_, err = json.Marshal(message)
+				if err == nil {
+					var pong = PongMessage{
+						Type: "pong",
+						PID:  uuid.NewString(),
+					}
+					err = wsjson.Write(ctx.Con, ctx.C, pong)
+				}
+			}
+			if err != nil {
+				if err == io.EOF {
+					fmt.Println(message)
+					break
+				} else {
+					fmt.Println(err.Error())
+				}
+			}
+		}
+
 	}
 }
