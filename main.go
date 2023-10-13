@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/angelfluffyookami/247BVR/modules/bvr"
 	"github.com/angelfluffyookami/247BVR/modules/common/global"
@@ -51,6 +52,26 @@ func init() {
 	var Websocket = wshandler.NewConnection("wss://hs.vtolvr.live/")
 
 	Websocket.Subscribe(Websocket.Subscriptions.All())
+
+	defer func() {
+		time.Sleep(30 * time.Minute)
+
+		for _, x := range Websocket.BadUnmarshals {
+			fmt.Println(x)
+		}
+		for _, x := range Websocket.GoodUnmarshals {
+			fmt.Println(x)
+		}
+		for _, x := range Websocket.TypesFound {
+			fmt.Println(x)
+		}
+		for _, x := range Websocket.TrackingTypesFound {
+			fmt.Println(x)
+		}
+
+		os.Exit(0)
+
+	}()
 
 	/*
 	*	CreateOrUpdateJSON() creates a json configuration file if not exists, if exists and doesn't have all the configuration options,
