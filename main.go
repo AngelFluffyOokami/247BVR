@@ -12,7 +12,7 @@ import (
 	"github.com/angelfluffyookami/247BVR/modules/common/utils/database"
 	"github.com/angelfluffyookami/247BVR/modules/common/utils/database/globaldb"
 	wshandler "github.com/angelfluffyookami/247BVR/modules/common/websocket"
-	"github.com/angelfluffyookami/247BVR/modules/test"
+	"github.com/angelfluffyookami/247BVR/modules/dbengine"
 
 	discord_session "github.com/angelfluffyookami/247BVR/modules/session"
 	"github.com/bwmarrin/discordgo"
@@ -50,6 +50,8 @@ var err error
 func init() {
 
 	var Websocket = wshandler.NewConnection("wss://hs.vtolvr.live/")
+
+	dbengine.DBv.Init()
 
 	Websocket.Subscribe(Websocket.Subscriptions.All())
 
@@ -97,7 +99,6 @@ func init() {
 
 	go bvr.InitCache()
 	<-bvr.InitDone
-	test.Test()
 
 	/*
 	*	Database gets initialized, returning the DB engine to the variable DB, which then gets written to common.DB, for other

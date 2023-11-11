@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/angelfluffyookami/247BVR/modules/common/global"
+	"github.com/angelfluffyookami/247BVR/modules/handlers"
 	"github.com/google/uuid"
 	"nhooyr.io/websocket"
 	"nhooyr.io/websocket/wsjson"
@@ -123,6 +125,7 @@ func (ctx *Ws) wsReader() {
 		// Start a Goroutine to handle the message concurrently
 		//go ctx.handleWebSocketMessage(wsMsgByte)
 		message, err := ctx.decodeWsMessage(wsMsgByte)
+		fmt.Println(message)
 
 		if err != nil {
 			// ...
@@ -159,6 +162,7 @@ func (ctx *Ws) decodeWsMessage(wsMsgByte io.Reader) (string, error) {
 }
 
 func (ctx *Ws) handleWsMessage(message string) {
+
 	// Ping?
 	if isPingMessage(message) {
 		// Pong!
@@ -243,7 +247,7 @@ func (ctx *Ws) assertWsMessageType(message string) {
 				break
 			}
 		}
-		kill := PlayerEvent{}
+		kill := global.KillData{}
 		err := json.Unmarshal(jsonMarshal, &kill)
 		if err != nil {
 			fmt.Println(err.Error())
@@ -251,6 +255,7 @@ func (ctx *Ws) assertWsMessageType(message string) {
 		}
 		ctx.GoodUnmarshals = append(ctx.GoodUnmarshals, "kill")
 		fmt.Println("kill unmarshal good")
+		handlers.OnKillStream(kill)
 	case "tracking":
 		tracking := Tracking{}
 		err := json.Unmarshal(jsonMarshal, &tracking)
@@ -326,7 +331,7 @@ func (ctx *Ws) assertWsMessageType(message string) {
 				break
 			}
 		}
-		logout := []UserLogEvent{}
+		logout := UserLogEvent{}
 		err := json.Unmarshal(jsonMarshal, &logout)
 		if err != nil {
 			fmt.Println(err.Error())
