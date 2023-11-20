@@ -22,8 +22,8 @@ type WsMessage struct {
 
 // Tracking todo
 type Tracking struct {
-	TrackingType string `json:"trackingType"`
-	TrackingData any    `json:"trackingData"`
+	TrackingType string   `json:"trackingType"`
+	TrackingData []string `json:"trackingData"`
 }
 
 // LookupData todo
@@ -62,7 +62,62 @@ type KillData struct {
 	Victim PlayerEvent `json:"victim"`
 	Killer PlayerEvent `json:"killer"`
 	Weapon
+	Identification
+	Identified bool
+	Season     int        `json:"season"`
 	ServerInfo ServerInfo `json:"serverInfo"`
+}
+
+type SpawnPlace struct {
+	Property1 int `json:"property1"`
+	Property2 int `json:"property2"`
+}
+
+type EloHistory struct {
+	Elo  int `json:"elo"`
+	Time int `json:"time"`
+}
+
+type UserInfo struct {
+	Id                      string        `json:"id"`
+	PilotNames              []string      `json:"pilotNames"`
+	LoginTimes              []int         `json:"loginTimes"`
+	LogoutTimes             []int         `json:"logoutTimes"`
+	Kills                   int           `json:"kills"`
+	Deaths                  int           `json:"deaths"`
+	Spawns                  SpawnPlace    `json:"spawns"`
+	Elo                     int           `json:"elo"`
+	EloHistory              []EloHistory  `json:"eloHistory"`
+	Rank                    int           `json:"rank"`
+	History                 []string      `json:"history"`
+	DiscordId               string        `json:"discordId"`
+	IsBanned                bool          `json:"isBanned"`
+	TeamKills               int           `json:"teamKills"`
+	IgnoreKillsAgainstUsers []string      `json:"ignoreKillsAgainstUsers"`
+	EndOfSeasonStats        []SeasonStats `json:"endOfSeasonStats"`
+}
+
+type SeasonStats struct {
+	Season    int    `json:"season"`
+	Rank      int    `json:"rank"`
+	Elo       int    `json:"elo"`
+	TeamKills int    `json:"teamKills"`
+	History   string `json:"history"`
+}
+
+type DeathData struct {
+	Victim     PlayerEvent `json:"victim"`
+	Killer     PlayerEvent `json:"killer"`
+	ServerInfo ServerInfo  `json:"serverInfo"`
+	Cause      string      `json:"cause"`
+	Season     int         `json:"season"`
+	Identification
+	Identified bool
+}
+
+type Identification struct {
+	Id   string `json:"id,omitempty"`
+	Time int    `json:"time,omitempty"`
 }
 
 // Weapon todo

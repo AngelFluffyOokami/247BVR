@@ -141,13 +141,6 @@ func (*Ws) subscribeType() string {
 	return "subscribe"
 }
 
-// Online todo
-type Online struct {
-	Name string `json:"name"`
-	ID   string `json:"id"`
-	Team string `json:"team"`
-}
-
 // PlayerEvent todo
 type PlayerEvent struct {
 	OwnerID   string   `json:"ownerId"`
@@ -156,14 +149,6 @@ type PlayerEvent struct {
 	Velocity  XYZ      `json:"velocity"`
 	Team      string   `json:"team"`
 	Type      string   `json:"type"`
-}
-
-// KillData todo
-type KillData struct {
-	Victim PlayerEvent `json:"victim"`
-	Killer PlayerEvent `json:"killer"`
-	Weapon
-	ServerInfo ServerInfo `json:"serverInfo"`
 }
 
 // Weapon todo
@@ -186,23 +171,4 @@ type ServerInfo struct {
 	OnlineUsers []string `json:"onlineUsers"`
 	TimeOfDay   string   `json:"timeOfDay"`
 	MissionID   string   `json:"missionId"`
-}
-
-// SpawnData todo
-type SpawnData struct {
-	Player     PlayerEvent `json:"user"`
-	ServerInfo ServerInfo  `json:"serverInfo"`
-}
-
-// OnlineData todo
-type OnlineData struct {
-	Name string `json:"name"`
-	ID   string `json:"id"`
-	Team string `json:"team"`
-}
-
-// UserLogEvent todo
-type UserLogEvent struct {
-	UserID    string `json:"userId"`
-	PilotName string `json:"pilotName,omitEmpty"`
 }

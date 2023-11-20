@@ -49,11 +49,14 @@ var err error
 
 func init() {
 
+	dbengine.DBv.Init()
 	var Websocket = wshandler.NewConnection("wss://hs.vtolvr.live/")
 
 	dbengine.DBv.Init()
+	var subs []string
+	subs = append(subs, Websocket.Subscriptions.Kill())
 
-	Websocket.Subscribe(Websocket.Subscriptions.All())
+	Websocket.Subscribe(subs)
 
 	defer func() {
 		time.Sleep(30 * time.Minute)

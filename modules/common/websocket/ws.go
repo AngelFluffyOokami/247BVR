@@ -213,19 +213,7 @@ func (ctx *Ws) assertWsMessageType(message string) {
 
 	switch wsMessage.Type {
 	case "online":
-
-		for _, x := range ctx.BadUnmarshals {
-			if x == "online" {
-				break
-			}
-		}
-
-		for _, x := range ctx.GoodUnmarshals {
-			if x == "online" {
-				break
-			}
-		}
-		online := []OnlineData{}
+		online := []global.OnlineData{}
 		err := json.Unmarshal(jsonMarshal, &online)
 		if err != nil {
 			fmt.Println(err.Error())
@@ -233,113 +221,60 @@ func (ctx *Ws) assertWsMessageType(message string) {
 		}
 
 		ctx.GoodUnmarshals = append(ctx.GoodUnmarshals, "online")
-		fmt.Println("online unmarshal good")
+		handlers.OnOnlineStream(online)
 	case "kill":
-
-		for _, x := range ctx.BadUnmarshals {
-			if x == "kill" {
-				break
-			}
-		}
-
-		for _, x := range ctx.GoodUnmarshals {
-			if x == "kill" {
-				break
-			}
-		}
 		kill := global.KillData{}
 		err := json.Unmarshal(jsonMarshal, &kill)
+
 		if err != nil {
 			fmt.Println(err.Error())
 			return
 		}
-		ctx.GoodUnmarshals = append(ctx.GoodUnmarshals, "kill")
-		fmt.Println("kill unmarshal good")
+
 		handlers.OnKillStream(kill)
 	case "tracking":
-		tracking := Tracking{}
+		tracking := global.Tracking{}
 		err := json.Unmarshal(jsonMarshal, &tracking)
+
 		if err != nil {
 			fmt.Println(err.Error())
 			return
 		}
-		found := false
-		for _, x := range ctx.TrackingTypesFound {
-			if x == tracking.TrackingType {
-				found = true
-			}
-		}
 
-		trackData, err := json.Marshal(tracking.TrackingData)
-		if err != nil {
-			return
-		}
-
-		if !found {
-			fmt.Println("newTrackingType: " + tracking.TrackingType + "\n" + string(trackData) + "\n\n")
-			ctx.TrackingTypesFound = append(ctx.TrackingTypesFound, tracking.TrackingType)
-		}
+		handlers.OnTrackingStream(tracking)
 	case "spawn":
-		for _, x := range ctx.BadUnmarshals {
-			if x == "spawn" {
-				break
-			}
-		}
-
-		for _, x := range ctx.GoodUnmarshals {
-			if x == "spawn" {
-				break
-			}
-		}
-		spawn := SpawnData{}
+		spawn := global.SpawnData{}
 		err := json.Unmarshal(jsonMarshal, &spawn)
+
 		if err != nil {
 			fmt.Println(err.Error())
 			return
 		}
-		ctx.GoodUnmarshals = append(ctx.GoodUnmarshals, "spawn")
-		fmt.Println("spawn unmarshal good")
+
+		handlers.OnSpawnStream(spawn)
 	case "user_login":
-		for _, x := range ctx.BadUnmarshals {
-			if x == "user_login" {
-				break
-			}
-		}
 
-		for _, x := range ctx.GoodUnmarshals {
-			if x == "user_login" {
-				break
-			}
-		}
-		login := UserLogEvent{}
+		login := global.UserLogEvent{}
 		err := json.Unmarshal(jsonMarshal, &login)
+
 		if err != nil {
 			fmt.Println(err.Error())
 			return
-		}
-		ctx.GoodUnmarshals = append(ctx.GoodUnmarshals, "user_login")
-		fmt.Println("user_login unmarshal good")
-	case "user_logout":
-		for _, x := range ctx.BadUnmarshals {
-			if x == "user_logout" {
-				break
-			}
 		}
 
-		for _, x := range ctx.GoodUnmarshals {
-			if x == "user_logout" {
-				break
-			}
-		}
-		logout := UserLogEvent{}
+		handlers.OnLoginStream(login)
+
+	case "user_logout":
+
+		logout := global.UserLogEvent{}
 		err := json.Unmarshal(jsonMarshal, &logout)
+
 		if err != nil {
 			fmt.Println(err.Error())
-			ctx.BadUnmarshals = append(ctx.BadUnmarshals, "user_logout")
 			return
 		}
-		ctx.GoodUnmarshals = append(ctx.GoodUnmarshals, "user_logout")
-		fmt.Println("user_logout unmarshal good")
+
+		handlers.OnLogoutStream(logout)
 	}
 
 }
@@ -349,6 +284,10 @@ func isPingMessage(message string) bool {
 	// Check if the message is a ping message (you can define your criteria)
 
 	return strings.Contains(message, "ping")
+}
+
+func (ctx *Ws) Sync() {
+
 }
 
 // sendPongMessage sends a pong message in response to a ping message.
