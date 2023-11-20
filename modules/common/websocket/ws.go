@@ -286,10 +286,6 @@ func isPingMessage(message string) bool {
 	return strings.Contains(message, "ping")
 }
 
-func (ctx *Ws) Sync() {
-
-}
-
 // sendPongMessage sends a pong message in response to a ping message.
 func (ctx *Ws) sendPongMessage() error {
 	pong := PongMessage{
