@@ -14,12 +14,6 @@ type WsMessage struct {
 	Pid  string `json:"pid"`
 }
 
-// Tracking todo
-type Tracking struct {
-	TrackingType string `json:"trackingType"`
-	TrackingData any    `json:"trackingData"`
-}
-
 // MessageType contains constants of valid message types.
 type MessageType struct {
 }
@@ -139,36 +133,4 @@ type PongMessage struct {
 // SubscribeType todo
 func (*Ws) subscribeType() string {
 	return "subscribe"
-}
-
-// PlayerEvent todo
-type PlayerEvent struct {
-	OwnerID   string   `json:"ownerId"`
-	Occupants []string `json:"occupants"`
-	Position  XYZ      `json:"position"`
-	Velocity  XYZ      `json:"velocity"`
-	Team      string   `json:"team"`
-	Type      string   `json:"type"`
-}
-
-// Weapon todo
-type Weapon struct {
-	Weapon                  string `json:"weapon"`
-	WeaponUUID              string `json:"weaponUuid"`
-	PreviousDamagedByUserID string `json:"previousDamagedByUserId"`
-	PreviousDamagedByWeapon string `json:"previousDamagedByWeapon"`
-}
-
-// XYZ todo
-type XYZ struct {
-	X float64 `json:"x"`
-	Y float64 `json:"y"`
-	Z float64 `json:"z"`
-}
-
-// ServerInfo todo
-type ServerInfo struct {
-	OnlineUsers []string `json:"onlineUsers"`
-	TimeOfDay   string   `json:"timeOfDay"`
-	MissionID   string   `json:"missionId"`
 }

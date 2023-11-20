@@ -12,7 +12,7 @@ var DBv = &DB{}
 
 // DB Struct holds values and functions for the engine.
 type DB struct {
-	db *scribble.Driver
+	Db *scribble.Driver
 }
 
 // Init Initializes database engine.
@@ -26,7 +26,7 @@ func (ctx *DB) initDB() {
 	var err error
 	// a new scribble driver, providing the directory where it will be writing to,
 	// and a qualified logger if desired
-	ctx.db, err = scribble.New("./vtol.vr", nil)
+	ctx.Db, err = scribble.New("./vtol.vr", nil)
 	if err != nil {
 		fmt.Println("Error", err)
 	}
@@ -46,7 +46,7 @@ func (ctx *DB) WriteDB(dataType string, data any, pid string) {
 			break
 		}
 		quickAsserted = true
-		ctx.db.Write("kill", pid, killsData)
+		ctx.Db.Write("kill", pid, killsData)
 
 	case "online":
 		onlineData, ok := data.([]global.OnlineData)
@@ -57,7 +57,7 @@ func (ctx *DB) WriteDB(dataType string, data any, pid string) {
 			break
 		}
 		quickAsserted = true
-		ctx.db.Write("online", pid, onlineData)
+		ctx.Db.Write("online", pid, onlineData)
 	case "spawn":
 		spawnData, ok := data.(global.SpawnData)
 
@@ -67,7 +67,7 @@ func (ctx *DB) WriteDB(dataType string, data any, pid string) {
 			break
 		}
 		quickAsserted = true
-		ctx.db.Write("spawn", pid, spawnData)
+		ctx.Db.Write("spawn", pid, spawnData)
 	case "login":
 		loginData, ok := data.(global.UserLogEvent)
 		if !ok {
@@ -76,7 +76,7 @@ func (ctx *DB) WriteDB(dataType string, data any, pid string) {
 			break
 		}
 		quickAsserted = true
-		ctx.db.Write("login", pid, loginData)
+		ctx.Db.Write("login", pid, loginData)
 	case "logout":
 		logoutData, ok := data.(global.UserLogEvent)
 		if !ok {
@@ -85,9 +85,9 @@ func (ctx *DB) WriteDB(dataType string, data any, pid string) {
 			break
 		}
 		quickAsserted = true
-		ctx.db.Write("login", pid, logoutData)
+		ctx.Db.Write("login", pid, logoutData)
 	default:
-		ctx.db.Write(dataType, pid, data.([]string))
+		ctx.Db.Write(dataType, pid, data.([]string))
 	}
 
 	if !quickAsserted {

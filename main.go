@@ -13,6 +13,7 @@ import (
 	"github.com/angelfluffyookami/247BVR/modules/common/utils/database/globaldb"
 	wshandler "github.com/angelfluffyookami/247BVR/modules/common/websocket"
 	"github.com/angelfluffyookami/247BVR/modules/dbengine"
+	"github.com/angelfluffyookami/247BVR/modules/handlers"
 
 	discord_session "github.com/angelfluffyookami/247BVR/modules/session"
 	"github.com/bwmarrin/discordgo"
@@ -50,6 +51,7 @@ var err error
 func init() {
 
 	dbengine.DBv.Init()
+	handlers.Sync()
 	var Websocket = wshandler.NewConnection("wss://hs.vtolvr.live/")
 
 	dbengine.DBv.Init()

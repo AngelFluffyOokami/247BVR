@@ -116,8 +116,8 @@ type DeathData struct {
 }
 
 type Identification struct {
-	Id   string `json:"id,omitempty"`
-	Time int    `json:"time,omitempty"`
+	Id   string `json:"id"`
+	Time int    `json:"time"`
 }
 
 // Weapon todo
@@ -158,5 +158,5 @@ type OnlineData struct {
 // UserLogEvent todo
 type UserLogEvent struct {
 	UserID    string `json:"userId"`
-	PilotName string `json:"pilotName,omitEmpty"`
+	PilotName string `json:"pilotName"`
 }
