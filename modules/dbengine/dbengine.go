@@ -39,7 +39,7 @@ func (ctx *DB) WriteDB(dataType string, data any, pid string) {
 
 	switch dataType {
 	case "kill":
-		killsData, ok := data.(global.KillData)
+		killsData, ok := data.(global.WsKillEvent)
 		if !ok {
 			fmt.Println("bad type assertion, breaking from QuickAssert and attempting to assert proper data type.")
 			quickAsserted = false
@@ -49,7 +49,7 @@ func (ctx *DB) WriteDB(dataType string, data any, pid string) {
 		ctx.Db.Write("kill", pid, killsData)
 
 	case "online":
-		onlineData, ok := data.([]global.OnlineData)
+		onlineData, ok := data.([]global.WsOnlineData)
 
 		if !ok {
 			fmt.Println("bad type assertion, breaking from QuickAssert and attempting to assert proper data type.")
@@ -59,7 +59,7 @@ func (ctx *DB) WriteDB(dataType string, data any, pid string) {
 		quickAsserted = true
 		ctx.Db.Write("online", pid, onlineData)
 	case "spawn":
-		spawnData, ok := data.(global.SpawnData)
+		spawnData, ok := data.(global.WsSpawnData)
 
 		if !ok {
 			fmt.Println("bad type assertion, breaking from QuickAssert and attempting to assert proper data type.")
@@ -69,7 +69,7 @@ func (ctx *DB) WriteDB(dataType string, data any, pid string) {
 		quickAsserted = true
 		ctx.Db.Write("spawn", pid, spawnData)
 	case "login":
-		loginData, ok := data.(global.UserLogEvent)
+		loginData, ok := data.(global.WsUserLogEvent)
 		if !ok {
 			fmt.Println("bad type assertion, breaking from QuickAssert and attempting to assert proper data type.")
 			quickAsserted = false
@@ -78,7 +78,7 @@ func (ctx *DB) WriteDB(dataType string, data any, pid string) {
 		quickAsserted = true
 		ctx.Db.Write("login", pid, loginData)
 	case "logout":
-		logoutData, ok := data.(global.UserLogEvent)
+		logoutData, ok := data.(global.WsUserLogEvent)
 		if !ok {
 			fmt.Println("bad type assertion, breaking from QuickAssert and attempting to assert proper data type.")
 			quickAsserted = false

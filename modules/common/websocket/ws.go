@@ -213,7 +213,7 @@ func (ctx *Ws) assertWsMessageType(message string) {
 
 	switch wsMessage.Type {
 	case "online":
-		online := []global.OnlineData{}
+		online := []global.WsOnlineData{}
 		err := json.Unmarshal(jsonMarshal, &online)
 		if err != nil {
 			fmt.Println(err.Error())
@@ -223,7 +223,7 @@ func (ctx *Ws) assertWsMessageType(message string) {
 		ctx.GoodUnmarshals = append(ctx.GoodUnmarshals, "online")
 		handlers.OnOnlineStream(online)
 	case "kill":
-		kill := global.KillData{}
+		kill := global.WsKillEvent{}
 		err := json.Unmarshal(jsonMarshal, &kill)
 
 		if err != nil {
@@ -243,7 +243,7 @@ func (ctx *Ws) assertWsMessageType(message string) {
 
 		handlers.OnTrackingStream(tracking)
 	case "spawn":
-		spawn := global.SpawnData{}
+		spawn := global.WsSpawnData{}
 		err := json.Unmarshal(jsonMarshal, &spawn)
 
 		if err != nil {
@@ -254,7 +254,7 @@ func (ctx *Ws) assertWsMessageType(message string) {
 		handlers.OnSpawnStream(spawn)
 	case "user_login":
 
-		login := global.UserLogEvent{}
+		login := global.WsUserLogEvent{}
 		err := json.Unmarshal(jsonMarshal, &login)
 
 		if err != nil {
@@ -266,7 +266,7 @@ func (ctx *Ws) assertWsMessageType(message string) {
 
 	case "user_logout":
 
-		logout := global.UserLogEvent{}
+		logout := global.WsUserLogEvent{}
 		err := json.Unmarshal(jsonMarshal, &logout)
 
 		if err != nil {

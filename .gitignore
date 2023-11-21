@@ -4,3 +4,5 @@
 *.exe
 *.sum
 *.sum
+vtol.vr/*
+vtol.vr
