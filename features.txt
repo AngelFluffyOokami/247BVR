@@ -1,0 +1,20 @@
+Favorite weapon
+effect on elo multipliers
+
+Highest Kill Streak
+Longest Drought
+Longest Life
+Most Enemies Killed within xyz time
+Most elo won/lost in session
+Highest elo reached
+Lowest elo reached
+total collision kills/deaths
+Time spent in leaderboard
+total playtime in server
+highest elo kiilled
+lowest elo killed
+farthest kill
+closest kill
+most kills in one session
+most deaths in one session
+

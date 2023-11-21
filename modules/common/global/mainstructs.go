@@ -53,10 +53,11 @@ type User struct {
 	EndOfSeasonStats []EndOfSeasonStats `json:"endOfSeasonStats"`
 	Rank             int                `json:"rank"`
 	History          []time.Time        `json:"history"`
+	Identified       bool
 }
 
 type UserLimited struct {
-	ID         string   `json:"id"`
+	ID0        string   `json:"id"`
 	PilotNames []string `json:"pilotNames"`
 	Kills      int      `json:"kills"`
 	Deaths     int      `json:"deaths"`
@@ -64,4 +65,5 @@ type UserLimited struct {
 	Rank       int      `json:"rank"`
 	DiscordID  string   `json:"discordId"`
 	TeamKills  int      `json:"teamKills"`
+	Identified bool
 }

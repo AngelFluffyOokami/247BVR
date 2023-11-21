@@ -3,9 +3,11 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/angelfluffyookami/247BVR/modules/common/global"
@@ -161,9 +163,186 @@ func OnTrackingStream(tracking global.Tracking) {
 
 func Sync() {
 
-	killSync()
+	go userSync()
+
+	go killSync()
+	<-usersync
+	<-killsync
+
+	fmt.Println("Sync Done, continuing startup.")
+}
+
+var usersync = make(chan bool)
+var killsync = make(chan bool)
+
+func userSync() {
+
+	limitedMap := usersJsonGet("https://hs.vtolvr.live/api/v1/public/users")
+	empty := false
+	userString, err := dbengine.DBv.Db.ReadAll("users")
+
+	if err != nil {
+		fmt.Println("err encountered, assuming empty")
+		empty = true
+	}
+	var users global.Users
+
+	if !empty {
+
+		for _, v := range userString {
+			var x global.User
+			json.Unmarshal([]byte(v), &x)
+			users = append(users, x)
+		}
+	}
+	syncUser(limitedMap, users)
+	usersync <- true
+}
+
+func syncUser(limitedUserMap map[string]global.UserLimited, users global.Users) {
+	for _, v := range users {
+		_, ok := limitedUserMap[v.ID0]
+		if ok {
+			delete(limitedUserMap, v.ID0)
+		}
+	}
+
+	for _, v := range limitedUserMap {
+		newUser := global.User{
+			ID0:        v.ID0,
+			PilotNames: v.PilotNames,
+			Kills:      v.Kills,
+			Deaths:     v.Deaths,
+			Elo:        v.Elo,
+			Rank:       v.Rank,
+			DiscordID:  v.DiscordID,
+			TeamKills:  v.TeamKills,
+			Identified: false,
+		}
+		dbengine.DBv.WriteDB("users", newUser, newUser.ID0)
+	}
+	identifyUser()
+}
+
+func identifyUser() {
+
+	dbUsers, _ := dbengine.DBv.Db.ReadAll("users")
+
+	unidentifiedUsers := make(map[string]global.User)
+
+	for _, v := range dbUsers {
+		var user global.User
+		json.Unmarshal([]byte(v), &user)
+		if !user.Identified {
+			unidentifiedUsers[user.ID0] = user
+
+			if len(user.PilotNames) >= 1 {
+				fmt.Println("Unidentified user: " + user.ID0 + " " + user.PilotNames[0])
+			} else {
+				fmt.Println("Unidentified user: " + user.ID0 + " " + user.ID)
+			}
+
+		}
+	}
+
+	for _, v := range unidentifiedUsers {
+		threadSync.Add(1)
+		go idThread(v)
+		if currentThreads >= 64 {
+			fmt.Println("waiting on threads")
+			threadSync.Wait()
+		}
+		currentThreads += 1
+		fmt.Println("current id threads: " + fmt.Sprint(currentThreads))
+
+	}
+
+	fmt.Println("waiting on last threads")
+	threadSync.Wait()
 
 }
+
+var currentThreads = 0
+var threadSync sync.WaitGroup
+
+func idThread(unidentifiedUser global.User) {
+	if len(unidentifiedUser.PilotNames) >= 1 {
+		fmt.Println("Get Request: " + unidentifiedUser.ID0 + " " + unidentifiedUser.PilotNames[0])
+	} else {
+		fmt.Println("Get Request: " + unidentifiedUser.ID0 + " " + unidentifiedUser.ID)
+	}
+	newuser, ok := userJsonGet(unidentifiedUser.ID0, "https://hs.vtolvr.live/api/v1/public/users")
+	if ok {
+		go dbengine.DBv.WriteDB("users", newuser, newuser.ID0)
+
+		if len(newuser.PilotNames) >= 1 {
+			fmt.Println("Unidentified user: " + newuser.ID0 + " " + newuser.PilotNames[0] + "identified")
+		} else {
+			fmt.Println("Unidentified user: " + newuser.ID0 + " " + newuser.ID + "Identified")
+		}
+	} else {
+		fmt.Println("BLEHHHH")
+	}
+
+	currentThreads -= 1
+	defer threadSync.Done()
+
+}
+func userJsonGet(ID string, url string) (global.User, bool) {
+
+	resp, err := http.Get(url + "/" + ID)
+	if err != nil {
+		return global.User{}, false
+	}
+
+	defer resp.Body.Close()
+
+	msg, err := io.ReadAll(resp.Body)
+
+	if err != nil {
+
+		return global.User{}, false
+	}
+
+	var user global.User
+	json.Unmarshal(msg, &user)
+	if len(user.PilotNames) >= 1 {
+		fmt.Println("Unmarshalled user: " + user.ID0 + " " + user.PilotNames[0])
+	} else {
+		fmt.Println("Unmarshalled user: " + user.ID0 + " " + user.ID)
+	}
+	return user, true
+
+}
+
+func usersJsonGet(url string) map[string]global.UserLimited {
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil
+	}
+
+	defer resp.Body.Close()
+
+	msg, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Panic(err)
+	}
+	limitedMap := make(map[string]global.UserLimited)
+	var limited []global.UserLimited
+
+	json.Unmarshal(msg, &limited)
+	for _, v := range limited {
+		limitedMap[v.ID0] = v
+	}
+
+	if err != nil {
+
+		log.Fatal(err)
+		return nil
+	}
+	return limitedMap
+}
+
 func killSync() {
 	endpointKills := getKillsJson("http://hs.vtolvr.live/api/v1/public/kills")
 
@@ -195,7 +374,7 @@ func killSync() {
 	if !empty {
 		updateKill(endpointKills, databaseKills)
 	}
-
+	killsync <- true
 }
 
 func populateKills(endpointMapKills map[string]global.KillEvent, databaseKills global.Kills) {
@@ -213,6 +392,7 @@ func populateKills(endpointMapKills map[string]global.KillEvent, databaseKills g
 		if !ok {
 			v.Identified = true
 			go dbengine.DBv.WriteDB("kill", v, v.WeaponUUID)
+			fmt.Println("Populated kill: " + v.WeaponUUID + " " + fmt.Sprint(v.Weapon))
 		}
 	}
 
@@ -236,6 +416,12 @@ func getKillsJson(url string) map[string]global.KillEvent {
 		if err = dec.Decode(&kill); err != nil {
 			log.Panic(err)
 		}
+
+		if kill.WeaponUUID == "" {
+			kill.WeaponUUID = kill.ID0
+		}
+
+		fmt.Println("Decoding kill JSON: " + kill.WeaponUUID + " " + fmt.Sprint(kill.Weapon))
 		killMap[kill.WeaponUUID] = kill
 	}
 
@@ -264,7 +450,9 @@ func updateKill(endpointMapKills map[string]global.KillEvent, databaseKills glob
 		v.ID0 = endpointMapKills[v.WeaponUUID].ID0
 		v.Time = endpointMapKills[v.WeaponUUID].Time
 		v.Identified = true
-		dbengine.DBv.WriteDB("kill", v, v.WeaponUUID)
+		go dbengine.DBv.WriteDB("kill", v, v.WeaponUUID)
+
+		fmt.Println("Identified Kill: " + v.WeaponUUID + " " + fmt.Sprint(v.Weapon))
 	}
 
 }

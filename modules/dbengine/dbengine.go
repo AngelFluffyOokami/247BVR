@@ -86,6 +86,16 @@ func (ctx *DB) WriteDB(dataType string, data any, pid string) {
 		}
 		quickAsserted = true
 		ctx.Db.Write("login", pid, logoutData)
+	case "users":
+		userData, ok := data.(global.User)
+		if !ok {
+			// this log message is ostensably a lie judging from how it never really tries doing anytthing if QuickAssert fails.
+			fmt.Println("bad type assertion, breaking from QuickAssert and attempting to assert proper data type.")
+			quickAsserted = false
+			break
+		}
+		quickAsserted = true
+		ctx.Db.Write("users", pid, userData)
 	default:
 		ctx.Db.Write(dataType, pid, data.([]string))
 	}
