@@ -173,20 +173,28 @@ func killSync() {
 
 	databaseString, err := dbengine.DBv.Db.ReadAll("kill")
 
+	empty := false
 	if err != nil {
-		log.Panic(err)
+		fmt.Println("err returned, assuming db is empty")
+		empty = true
 	}
 
 	var databaseKills global.Kills
 
-	for _, v := range databaseString {
-		var x global.KillEvent
-		json.Unmarshal([]byte(v), &x)
-		databaseKills = append(databaseKills, x)
+	if !empty {
+
+		for _, v := range databaseString {
+			var x global.KillEvent
+			json.Unmarshal([]byte(v), &x)
+			databaseKills = append(databaseKills, x)
+		}
 	}
 
-	updateKill(endpointKills, databaseKills)
 	populateKills(endpointKills, databaseKills)
+
+	if !empty {
+		updateKill(endpointKills, databaseKills)
+	}
 
 }
 
