@@ -39,7 +39,7 @@ func (ctx *DB) WriteDB(dataType string, data any, pid string) {
 
 	switch dataType {
 	case "kill":
-		killsData, ok := data.(global.WsKillEvent)
+		killsData, ok := data.(global.KillEvent)
 		if !ok {
 			fmt.Println("bad type assertion, breaking from QuickAssert and attempting to assert proper data type.")
 			quickAsserted = false
