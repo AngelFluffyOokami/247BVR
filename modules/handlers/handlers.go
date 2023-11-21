@@ -190,13 +190,9 @@ func killSync() {
 
 }
 
-func populateKills(endpointKills global.Kills, databaseKills global.Kills) {
+func populateKills(endpointMapKills map[string]global.KillEvent, databaseKills global.Kills) {
 
-	var endpointMapKills map[string]global.KillEvent
-	var databaseMapKills map[string]global.KillEvent
-
-	endpointMapKills = make(map[string]global.KillEvent)
-	databaseMapKills = make(map[string]global.KillEvent)
+	databaseMapKills := make(map[string]global.KillEvent)
 	// Populate Map
 	for _, v := range databaseKills {
 
@@ -204,13 +200,7 @@ func populateKills(endpointKills global.Kills, databaseKills global.Kills) {
 
 	}
 
-	// Populate Map
-	for _, v := range endpointKills {
-
-		endpointMapKills[v.WeaponUUID] = v
-	}
-
-	for _, v := range endpointKills {
+	for _, v := range endpointMapKills {
 		_, ok := databaseMapKills[v.WeaponUUID]
 		if !ok {
 			v.Identified = true
@@ -220,7 +210,7 @@ func populateKills(endpointKills global.Kills, databaseKills global.Kills) {
 
 }
 
-func getKillsJson(url string) global.Kills {
+func getKillsJson(url string) map[string]global.KillEvent {
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil
@@ -230,35 +220,33 @@ func getKillsJson(url string) global.Kills {
 
 	dec := json.NewDecoder(resp.Body)
 
-	var kills global.Kills
+	killMap := make(map[string]global.KillEvent)
 
-	err = dec.Decode(&kills)
+	for dec.More() {
+		var kill global.KillEvent
+
+		if err = dec.Decode(&kill); err != nil {
+			log.Panic(err)
+		}
+		killMap[kill.WeaponUUID] = kill
+	}
 
 	if err != nil {
 
 		log.Fatal(err)
 		return nil
 	}
-	return kills
+	return killMap
 }
 
-func updateKill(endpointKills global.Kills, databaseKills global.Kills) {
-	var endpointMapKills map[string]global.KillEvent
-	var unidentifiedKills map[string]global.KillEvent
+func updateKill(endpointMapKills map[string]global.KillEvent, databaseKills global.Kills) {
 
-	endpointMapKills = make(map[string]global.KillEvent)
-	unidentifiedKills = make(map[string]global.KillEvent)
+	unidentifiedKills := make(map[string]global.KillEvent)
 	// Populate Map
 	for _, v := range databaseKills {
 		if !v.Identified {
 			unidentifiedKills[v.WeaponUUID] = v
 		}
-	}
-
-	// Populate Map
-	for _, v := range endpointKills {
-
-		endpointMapKills[v.WeaponUUID] = v
 	}
 
 	// Iterate, identify, and overwrite unidentified objects
