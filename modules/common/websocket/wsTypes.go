@@ -112,7 +112,9 @@ type Ws struct {
 	C                  *websocket.Conn
 	Subscriptions      SubscribeData
 	Lookups            Lookups
+	ClosedChan         chan bool
 	URI                string
+	WsOnline           bool
 	CloseWS            chan bool
 	wg                 sync.WaitGroup
 	writeWg            sync.Mutex

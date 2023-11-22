@@ -35,6 +35,7 @@ func (ctx *Ws) startWsConnection() {
 		go ctx.wsReader()
 
 		// Inform a wait group that this connection has started
+		ctx.WsOnline = true
 		ctx.wg.Done()
 
 		select {
@@ -48,7 +49,26 @@ func (ctx *Ws) startWsConnection() {
 			if err := ctx.C.Close(websocket.StatusNormalClosure, "Client going offline"); err != nil {
 				log.Printf("Failed to close WebSocket: %v", err)
 			}
+		case <-ctx.ClosedChan:
+			// The connection has been closed, try to reconnect.
+			log.Println("Connection closed. Reconnecting...")
+			ctx.WsOnline = false
+			time.Sleep(time.Duration(ctx.SecondPerAttempt) * time.Second) // Wait before reconnecting
 
+		}
+	}
+}
+
+func (ctx *Ws) wsCloser() {
+
+	l := global.PauseAll.Listen()
+	defer l.Close()
+	for pause := range l.Ch {
+		if pause.(bool) {
+			ctx.CloseWS <- true
+			ctx.WsOnline = false
+		} else if !pause.(bool) {
+			ctx.startWsConnection()
 		}
 	}
 }
@@ -59,28 +79,11 @@ func NewConnection(URI string) *Ws {
 	var ctx Ws
 	ctx.URI = URI
 	ctx.wg.Add(1)
+	ctx.WsOnline = false
 	go ctx.startWsConnection()
 	ctx.wg.Wait()
+	go ctx.wsCloser()
 	return &ctx
-
-}
-
-// QueryByID queries HSVR ELO bot by ID and type
-func (ctx *Ws) QueryByID(Type string, ID string) {
-
-	newLookup := LookupData{
-		ID:   ID,
-		Type: Type,
-	}
-
-	newMessage := WsMessage{
-		Type: ctx.LookupType(),
-		Data: newLookup,
-		Pid:  uuid.NewString(),
-	}
-
-	// Executes queries
-	ctx.WriteMessage(newMessage)
 
 }
 
@@ -119,7 +122,8 @@ func (ctx *Ws) wsReader() {
 		_, wsMsgByte, err := ctx.C.Reader(ctx.Con)
 		if err != nil {
 			fmt.Println(err.Error())
-			continue
+			ctx.ClosedChan <- true
+			return
 		}
 
 		// Start a Goroutine to handle the message concurrently
@@ -128,7 +132,7 @@ func (ctx *Ws) wsReader() {
 		fmt.Println(message)
 
 		if err != nil {
-			// ...
+			fmt.Println(err.Error())
 		}
 
 		if ctx.last == message {

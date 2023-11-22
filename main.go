@@ -5,24 +5,18 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/angelfluffyookami/247BVR/modules/bvr"
 	"github.com/angelfluffyookami/247BVR/modules/common/global"
-	"github.com/angelfluffyookami/247BVR/modules/common/utils/database"
-	"github.com/angelfluffyookami/247BVR/modules/common/utils/database/globaldb"
-	wshandler "github.com/angelfluffyookami/247BVR/modules/common/websocket"
+
 	"github.com/angelfluffyookami/247BVR/modules/dbengine"
 	"github.com/angelfluffyookami/247BVR/modules/handlers"
 
 	discord_session "github.com/angelfluffyookami/247BVR/modules/session"
 	"github.com/bwmarrin/discordgo"
-	"gorm.io/gorm"
 )
 
 var s *discordgo.Session
-
-var db *gorm.DB
 
 /*
 * 	These maps are created for any module added using a build tag to add their functions upon init()
@@ -54,33 +48,10 @@ func init() {
 	handlers.Sync()
 
 	handlers.LowestElo()
-	var Websocket = wshandler.NewConnection("wss://hs.vtolvr.live/")
 
 	dbengine.DBv.Init()
-	var subs []string
-	subs = append(subs, Websocket.Subscriptions.Kill())
 
-	Websocket.Subscribe(subs)
-
-	defer func() {
-		time.Sleep(30 * time.Minute)
-
-		for _, x := range Websocket.BadUnmarshals {
-			fmt.Println(x)
-		}
-		for _, x := range Websocket.GoodUnmarshals {
-			fmt.Println(x)
-		}
-		for _, x := range Websocket.TypesFound {
-			fmt.Println(x)
-		}
-		for _, x := range Websocket.TrackingTypesFound {
-			fmt.Println(x)
-		}
-
-		os.Exit(0)
-
-	}()
+	startWs()
 
 	/*
 	*	CreateOrUpdateJSON() creates a json configuration file if not exists, if exists and doesn't have all the configuration options,
@@ -114,8 +85,7 @@ func init() {
 	*	Discord session gets initialized then returns the session to variable s, which proceeds to get written to common.Session for other
 	* 	modules to access without causing circular dependency import by attempting to use session from main package.
 	 */
-	db = database.InitDB()
-	globaldb.DBLoop(db)
+
 	s = discord_session.InitSession(config.Token)
 	global.Session = s
 	global.Config.ActiveSession = true

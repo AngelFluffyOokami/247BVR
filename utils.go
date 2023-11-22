@@ -7,6 +7,7 @@ import (
 	"github.com/angelfluffyookami/247BVR/modules/common/global"
 	"github.com/angelfluffyookami/247BVR/modules/common/utils/logger"
 
+	wshandler "github.com/angelfluffyookami/247BVR/modules/common/websocket"
 	"github.com/bwmarrin/discordgo"
 	"github.com/goccy/go-json"
 )
@@ -81,6 +82,12 @@ func exit() {
 	}
 	// closes discord session.
 	s.Close()
+}
+func startWs() {
+
+	var Websocket = wshandler.NewConnection("wss://hs.vtolvr.live/")
+	Websocket.Subscribe(Websocket.Subscriptions.All())
+
 }
 
 // beautifies a json file
