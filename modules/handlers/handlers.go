@@ -273,6 +273,7 @@ func idThread(unidentifiedUser global.User) {
 	}
 	newuser, ok := userJsonGet(unidentifiedUser.ID0, "https://hs.vtolvr.live/api/v1/public/users")
 	if ok {
+		newuser.Identified = true
 		go dbengine.DBv.WriteDB("users", newuser, newuser.ID0)
 
 		if len(newuser.PilotNames) >= 1 {

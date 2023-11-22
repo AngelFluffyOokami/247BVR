@@ -52,6 +52,8 @@ func init() {
 
 	dbengine.DBv.Init()
 	handlers.Sync()
+
+	handlers.LowestElo()
 	var Websocket = wshandler.NewConnection("wss://hs.vtolvr.live/")
 
 	dbengine.DBv.Init()

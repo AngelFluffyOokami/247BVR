@@ -1,0 +1,8 @@
+detonated
+pitbull
+kill
+weaponuuid
+damaged
+damagecount
+interceptedby
+intercepted

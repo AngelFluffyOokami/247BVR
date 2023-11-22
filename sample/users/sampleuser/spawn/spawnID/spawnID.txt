@@ -1,0 +1,13 @@
+spawnid
+spawntime
+cmsid
+cms
+landed
+deathID
+mission
+lockedonto
+gotlockedby
+
+campwarning
+
+achievmentsgotten

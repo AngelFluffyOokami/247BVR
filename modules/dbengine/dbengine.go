@@ -98,9 +98,10 @@ func (ctx *DB) WriteDB(dataType string, data any, pid string) {
 		ctx.Db.Write("users", pid, userData)
 	default:
 		ctx.Db.Write(dataType, pid, data.([]string))
+		quickAsserted = true
 	}
 
 	if !quickAsserted {
-		fmt.Println("false")
+		fmt.Println("Blehhh")
 	}
 }
