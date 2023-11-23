@@ -3,6 +3,16 @@
 *.html
 *.exe
 *.sum
-*.sum
 vtol.vr/*
 vtol.vr
+sample
+sample/*
+*.exe
+*.dll
+__debug*
+
+blehh
+blehh/*
+
+binutils
+binutils/*
