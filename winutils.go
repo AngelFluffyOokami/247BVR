@@ -3,26 +3,22 @@
 package main
 
 import (
+	"fmt"
+	"log"
 	"os"
+	"strings"
+	"syscall"
+	"time"
 
+	"github.com/angelfluffyookami/247BVR/modules/common/global/win32"
+	"github.com/bradfitz/iter"
 	"github.com/gdamore/tcell/v2"
 	scribble "github.com/nanobox-io/golang-scribble"
 	"github.com/rivo/tview"
+	"golang.org/x/sys/windows"
 )
 
-var winConfig string
-
-type firstboot struct {
-	firstboot bool
-}
-
-var firstText = `Welcome to the HSVR Bot firstboot installation utility.
-If you need to reinstall the bot, just set firstboot to true in the firstboot configuration file.
-If you only want to move your installation, set modifyinstall to true in the firstboot configuration file.
-If you erroneously set firstboot or modifyinstall to true, exit the application and set either/both flags to false.
-
-
-Do you wish to continue installing HSVR ELO Statistics Bot?`
+var app *tview.Application
 
 func init() {
 	var boot firstboot
@@ -31,58 +27,362 @@ func init() {
 		return
 	}
 	Db.Read("config", "firstboot", &boot)
-	if boot.firstboot {
-		app := tview.NewApplication()
+	if !boot.installed {
+		app = tview.NewApplication()
 
 		text := tview.NewTextView()
 		text.SetBorder(true)
 		text.SetText(firstText)
 		text.SetBackgroundColor(tcell.ColorBlack)
 		text.SetTextColor(tcell.ColorGreen)
-		text.SetBorderColor(tcell.ColorGreen)
+		text.SetBorderColor(tcell.ColorGreen).SetTitle("HSVR ELO Statistics Bot firstboot Installation")
 
-		continueButton := tview.NewButton("Continue").SetSelectedFunc(func() {
+		text.SetChangedFunc(func() {
+			app.Draw()
+		}).SetWordWrap(true).SetRegions(true)
+
+		text.SetBorder(true)
+		text.SetDisabled(true)
+
+		focusedstyle := tcell.StyleDefault
+		focusedstyle = focusedstyle.Background(tcell.ColorGreen)
+
+		unfocusedstyle := tcell.StyleDefault
+		unfocusedstyle = unfocusedstyle.Background(tcell.ColorBlack)
+
+		form := tview.NewForm()
+		form.AddButton("Continue", func() {
+			go continueFunc(text, form)
+		}).SetButtonActivatedStyle(focusedstyle).SetButtonStyle(unfocusedstyle)
+		form.AddButton("Cancel", func() { os.Exit(1) }).SetButtonActivatedStyle(focusedstyle).SetButtonStyle(unfocusedstyle)
+		form.SetBorder(false)
+		form.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+			if event.Key() == tcell.KeyLeft {
+				app.SetFocus(form.SetFocus(0))
+			} else if event.Key() == tcell.KeyRight {
+				app.SetFocus(form.SetFocus(1))
+			}
+			return event
 		})
-		cancelButton := tview.NewButton("Cancel").SetSelectedFunc(func() {
-			os.Exit(1)
-		})
-
-		continueButton.SetBorder(true).SetRect(0, 0, 22, 3)
-
-		cancelButton.SetBorder(true).SetRect(0, 0, 22, 3)
-
-		cancelButton.SetBorderColor(tcell.ColorBlack)
-		cancelButton.SetBackgroundColor(tcell.ColorBlack)
-		cancelButton.SetBackgroundColorActivated(tcell.ColorWhite)
-		cancelButton.SetLabelColorActivated(tcell.ColorGreen)
-		cancelButton.SetLabelColor(tcell.ColorGreen)
-
-		cancelButton.SetActivatedStyle(tcell.StyleDefault.Attributes(tcell.AttrBlink + tcell.AttrBold + tcell.AttrUnderline))
-		cancelButton.SetStyle(tcell.StyleDefault.Attributes(tcell.AttrDim))
-
-		continueButton.SetBorderColor(tcell.ColorBlack)
-		continueButton.SetBackgroundColor(tcell.ColorBlack)
-		continueButton.SetBackgroundColorActivated(tcell.ColorWhite)
-		continueButton.SetLabelColorActivated(tcell.ColorGreen)
-		continueButton.SetLabelColor(tcell.ColorGreen)
-
-		continueButton.SetActivatedStyle(tcell.StyleDefault.Attributes(tcell.AttrBlink + tcell.AttrBold + tcell.AttrUnderline))
-		continueButton.SetStyle(tcell.StyleDefault.Attributes(tcell.AttrDim))
-
-		buttonGrid := tview.NewGrid().SetColumns(2)
-
-		buttonGrid.AddItem(continueButton, 0, 0, 1, 1, 0, 0, true)
-		buttonGrid.AddItem(cancelButton, 0, 1, 1, 1, 0, 0, false)
 
 		mainArea := tview.NewGrid().
-			SetRows(2).AddItem(text, 0, 0, 10, 1, 0, 0, false)
-		mainArea.AddItem(buttonGrid, 1, 0, 1, 1, 0, 0, true)
-		mainArea.SetBorder(true).SetTitle("HSVR ELO Statistics Bot firstboot Installation")
-
+			SetRows(0, 3).
+			AddItem(text, 0, 0, 1, 2, 0, 0, false).
+			AddItem(form, 1, 0, 1, 1, 0, 0, true)
 		if err := app.SetRoot(mainArea,
 			true).EnableMouse(true).Run(); err != nil {
 			panic(err)
 		}
 
+	} else {
+		continueInit()
 	}
+}
+
+func continueFunc(text *tview.TextView, form *tview.Form) {
+	_, _, _, height := text.GetRect()
+
+	text.SetTitle("EULA")
+
+	form.ClearButtons()
+
+	whitespaceheight := height - 4
+	cursor := 0
+	for {
+		var newStr string
+		if cursor < 5 {
+			newStr = scroll[cursor]
+		}
+
+		for range iter.N(whitespaceheight - cursor) {
+			newStr += "\n"
+		}
+
+		var eulastring string
+		for j := 0; j < cursor; j++ {
+			if cursor >= 24 {
+				for b, v := range EULA {
+					if b == 0 {
+						eulastring += v
+					} else {
+						eulastring += "\n" + v
+					}
+
+				}
+
+				break
+			} else {
+				if j == 0 {
+					eulastring += EULA[j]
+				} else {
+					eulastring += "\n" + EULA[j]
+				}
+
+			}
+
+		}
+
+		// Move the cursor down one line
+		cursor++
+
+		text.SetText(newStr + eulastring)
+
+		app.Draw()
+		time.Sleep(100 * time.Millisecond)
+		// If the cursor has reached the bottom of the screen, reset it to the top
+		if cursor == (height - 3) {
+
+			form.AddButton("Accept", func() {
+				go installMethod(text, form)
+			})
+			form.AddButton("Deny", func() {
+				go politeGoodbye(text, form)
+			})
+			app.Draw()
+			break
+
+		}
+	}
+}
+
+func becomeAdmin() {
+	verb := "runas"
+	exe, _ := os.Executable()
+	cwd, _ := os.Getwd()
+	args := strings.Join(os.Args[1:], " ")
+
+	verbPtr, _ := syscall.UTF16PtrFromString(verb)
+	exePtr, _ := syscall.UTF16PtrFromString(exe)
+	cwdPtr, _ := syscall.UTF16PtrFromString(cwd)
+	argPtr, _ := syscall.UTF16PtrFromString(args)
+
+	var showCmd int32 = 1 //SW_NORMAL
+
+	err := windows.ShellExecute(0, verbPtr, exePtr, argPtr, cwdPtr, showCmd)
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
+func installMethod(text *tview.TextView, form *tview.Form) {
+	text.SetText(installText)
+	text.SetTitle("HSVR Installation")
+
+	form.ClearButtons()
+	form.AddButton("Windows Service (Recommended)", func() {
+
+		for {
+			if !admin() {
+				becomeAdmin()
+				os.Exit(0)
+			} else {
+				text.SetTitle("Installing...")
+				app.SetRoot(text, true)
+				go app.Draw()
+				go win32.Service("install")
+				go handleLog(text, form)
+				return
+			}
+		}
+
+	})
+	form.AddButton("Current User", func() {})
+	go app.Draw()
+}
+
+var logvar []string
+
+func handleLog(text *tview.TextView, form *tview.Form) {
+	for {
+		select {
+		case currentLog := <-win32.TextLog:
+			_, _, _, height := text.GetInnerRect()
+			if len(logvar) <= height {
+				logvar = append(logvar, currentLog)
+			} else {
+				RemoveIndex(logvar, 0)
+				logvar = append(logvar, currentLog)
+			}
+
+			var logs string
+			for _, v := range logvar {
+				if logs == "" {
+					logs += v
+				} else {
+					logs += "\n" + v
+				}
+			}
+
+			text.SetText(logs)
+			go app.Draw()
+		case installed := <-win32.Installed:
+			if installed {
+				return
+			} else {
+				log.Fatal("error installing")
+				return
+			}
+		}
+	}
+}
+
+func admin() bool {
+	_, err := os.Open("\\\\.\\PHYSICALDRIVE0")
+	if err != nil {
+		fmt.Println("admin no")
+		return false
+	}
+	fmt.Println("admin yes")
+	if windows.GetCurrentProcessToken().IsElevated() {
+		fmt.Println("elevated too")
+	}
+	return true
+}
+func politeGoodbye(text *tview.TextView, form *tview.Form) {
+	_, _, _, height := text.GetRect()
+
+	text.SetTitle("Sod Off, won't ya then?")
+	whitespaceheight := height - 24
+	form.ClearButtons()
+	cursor := 0
+
+	if height > 24 {
+
+		for {
+			var newStr string
+			if cursor < 24 {
+				eulaarr := EULA
+				for range iter.N(cursor + 1) {
+					eulaarr = RemoveIndex(eulaarr, 0)
+				}
+				for b, v := range eulaarr {
+					if b == 0 {
+						newStr += v
+
+					} else {
+						newStr += "\n" + v
+					}
+				}
+			} else if cursor == 24 {
+				newStr = ""
+			}
+			if whitespaceheight-cursor >= 1 {
+				for range iter.N(whitespaceheight - cursor) {
+					newStr += "\n"
+				}
+
+			}
+
+			var goobyestr string
+			for j := 0; j < cursor; j++ {
+				if cursor >= 18 {
+					for b, v := range politeBye {
+						if b == 0 {
+							goobyestr += v
+						} else {
+							goobyestr += "\n" + v
+						}
+
+					}
+
+					break
+				} else {
+					if j == 0 {
+						goobyestr += politeBye[j]
+					} else {
+						goobyestr += "\n" + politeBye[j]
+					}
+
+				}
+
+			}
+
+			// Move the cursor down one line
+			cursor++
+
+			text.SetText(newStr + goobyestr)
+
+			app.Draw()
+			time.Sleep(100 * time.Millisecond)
+			// If the cursor has reached the bottom of the screen, reset it to the top
+			if cursor == (height-whitespaceheight)+1 {
+
+				form.AddButton("Exit", func() {
+					os.Exit(0)
+				})
+				form.AddButton("Nuh uh", func() {
+					text.SetText(fymnuh)
+					form.ClearButtons()
+					form.AddButton("Shut up", func() {
+						form.ClearButtons()
+						form.AddButton("They're coming", func() {
+							form.ClearButtons()
+							form.AddButton("They're near", func() {
+								form.ClearButtons()
+								form.AddButton("They're in the walls", func() {
+									form.ClearButtons()
+									form.AddButton("Rip them out", func() {
+										form.ClearButtons()
+										form.AddButton("Too late", func() {
+											form.AddButton("They're in your veins", func() {
+												form.ClearButtons()
+												form.AddButton("Veins make you crazy", func() {
+													form.ClearButtons()
+													form.AddButton("Crazy?", func() {
+														form.ClearButtons()
+														form.AddButton("You were crazy once", func() {
+															form.ClearButtons()
+															form.AddButton("They put you in a rubber room", func() {
+																form.ClearButtons()
+																form.AddButton("A rubber room with veins.", func() {
+
+																	log.Fatal(fmt.Errorf("they're outthey're outthey're outthey're outthey're outthey're outthey're outthey're outthey're outthey're out\nthey're outthey're outthey're outthey're outthey're outthey're outthey're outthey're outthey're outthey're out\nthey're outthey're outthey're outthey're outthey're outthey're outthey're outthey're outthey're outthey're out\nthey're outthey're outthey're outthey're outthey're outthey're outthey're outthey're outthey're outthey're out\nthey're outthey're outthey're outthey're outthey're outthey're outthey're outthey're outthey're outthey're out\nthey're outthey're outthey're outthey're outthey're outthey're outthey're outthey're outthey're outthey're out\nthey're outthey're outthey're outthey're outthey're outthey're outthey're outthey're outthey're outthey're out"))
+																})
+																text.SetText(flower)
+																text.SetTextColor(tcell.ColorRed)
+																text.SetBackgroundColor(tcell.ColorDarkRed)
+																form.SetButtonBackgroundColor(tcell.ColorDarkRed)
+																form.SetButtonActivatedStyle(tcell.StyleDefault.Background(tcell.ColorRed))
+
+																go app.Draw()
+															})
+															go app.Draw()
+														})
+														go app.Draw()
+													})
+													go app.Draw()
+												})
+												go app.Draw()
+											})
+											go app.Draw()
+										})
+										go app.Draw()
+									})
+									go app.Draw()
+								})
+								go app.Draw()
+							})
+							go app.Draw()
+						})
+						go app.Draw()
+					})
+					go app.Draw()
+				})
+				go app.Draw()
+				break
+
+			}
+		}
+	}
+
+}
+
+func RemoveIndex(s []string, index int) []string {
+	ret := make([]string, 0)
+	ret = append(ret, s[:index]...)
+	return append(ret, s[index+1:]...)
+}
+
+type firstboot struct {
+	installed bool
 }

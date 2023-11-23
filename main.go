@@ -42,7 +42,7 @@ var config global.Data
 var off = make(chan bool)
 var err error
 
-func init() {
+func continueInit() {
 
 	dbengine.DBv.Init()
 	handlers.Sync()
@@ -91,7 +91,6 @@ func init() {
 	global.Config.ActiveSession = true
 
 }
-
 func main() {
 
 	//	iterate over DBMigrate function and run every function containing the DB automigrate function for every module.

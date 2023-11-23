@@ -4,37 +4,17 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
+	"syscall"
 	"time"
 
+	"github.com/angelfluffyookami/247BVR/modules/common/global/win32"
 	"github.com/bradfitz/iter"
 	"github.com/gdamore/tcell/v2"
 	scribble "github.com/nanobox-io/golang-scribble"
 	"github.com/rivo/tview"
+	"golang.org/x/sys/windows"
 )
-
-var firstText = "Welcome to the HSVR Bot firstboot installation utility." + "\n" +
-	"If you need to reinstall the bot, just set installed to false in the firstboot configuration file." + "\n" +
-	"If you only want to move your installation, set `modifyinstall` to true in the firstboot configuration file." + "\n" +
-	"If you erroneously set firstboot or modifyinstall to true, exit the application and set either/both flags to false" + "\n" +
-	"Do you wish to continue installing HSVR ELO Statistics Bot?"
-
-var scroll = []string{
-	"If you need to reinstall the bot, just set installed to false in the firstboot configuration file." + "\n" +
-		"If you only want to move your installation, set `modifyinstall` to true in the firstboot configuration file." + "\n" +
-		"If you erroneously set firstboot or modifyinstall to true, exit the application and set either/both flags to false" + "\n" +
-		"Do you wish to continue installing HSVR ELO Statistics Bot?",
-
-	"If you only want to move your installation, set `modifyinstall` to true in the firstboot configuration file." + "\n" +
-		"If you erroneously set firstboot or modifyinstall to true, exit the application and set either/both flags to false" + "\n" +
-		"Do you wish to continue installing HSVR ELO Statistics Bot?",
-
-	"If you erroneously set firstboot or modifyinstall to true, exit the application and set either/both flags to false" + "\n" +
-		"Do you wish to continue installing HSVR ELO Statistics Bot?",
-
-	"Do you wish to continue installing HSVR ELO Statistics Bot?",
-
-	"",
-}
 
 var app *tview.Application
 
@@ -148,7 +128,9 @@ func continueFunc(text *tview.TextView, form *tview.Form) {
 		// If the cursor has reached the bottom of the screen, reset it to the top
 		if cursor == (height - 3) {
 
-			form.AddButton("Accept", func() {})
+			form.AddButton("Accept", func() {
+				go installMethod(text, form)
+			})
 			form.AddButton("Deny", func() {
 				go politeGoodbye(text, form)
 			})
@@ -157,6 +139,115 @@ func continueFunc(text *tview.TextView, form *tview.Form) {
 
 		}
 	}
+}
+
+func becomeAdmin() {
+	verb := "runas"
+	exe, _ := os.Executable()
+	cwd, _ := os.Getwd()
+	args := strings.Join(os.Args[1:], " ")
+
+	verbPtr, _ := syscall.UTF16PtrFromString(verb)
+	exePtr, _ := syscall.UTF16PtrFromString(exe)
+	cwdPtr, _ := syscall.UTF16PtrFromString(cwd)
+	argPtr, _ := syscall.UTF16PtrFromString(args)
+
+	var showCmd int32 = 1 //SW_NORMAL
+
+	err := windows.ShellExecute(0, verbPtr, exePtr, argPtr, cwdPtr, showCmd)
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
+func installMethod(text *tview.TextView, form *tview.Form) {
+	text.SetText(installText)
+
+	form.ClearButtons()
+	form.AddButton("Windows Service (Recommended)", func() {
+
+		for {
+			if !admin() {
+				becomeAdmin()
+			} else {
+				text.SetTitle("Installing...")
+				app.SetRoot(text, true)
+				go app.Draw()
+				go win32.Service("install")
+				go handleLog(text, form)
+			}
+		}
+
+	})
+	form.AddButton("Current User", func() {})
+	go app.Draw()
+}
+
+var logvar []string
+
+func handleLog(text *tview.TextView, form *tview.Form) {
+	for {
+		select {
+		case currentLog := <-win32.TextLog:
+			_, _, _, height := text.GetInnerRect()
+			if len(logvar) <= height {
+				logvar = append(logvar, currentLog)
+			} else {
+				RemoveIndex(logvar, 0)
+				logvar = append(logvar, currentLog)
+			}
+
+			var logs string
+			for _, v := range logvar {
+				if logs == "" {
+					logs += v
+				} else {
+					logs += "\n" + v
+				}
+			}
+
+			text.SetText(logs)
+			go app.Draw()
+		case installed := <-win32.Installed:
+			if installed {
+				return
+			} else {
+				log.Fatal("error installing")
+				return
+			}
+		}
+	}
+}
+
+func admin() bool {
+	var sid *windows.SID
+
+	// Although this looks scary, it is directly copied from the
+	// official windows documentation. The Go API for this is a
+	// direct wrap around the official C++ API.
+	// See https://docs.microsoft.com/en-us/windows/desktop/api/securitybaseapi/nf-securitybaseapi-checktokenmembership
+	err := windows.AllocateAndInitializeSid(
+		&windows.SECURITY_NT_AUTHORITY,
+		2,
+		windows.SECURITY_BUILTIN_DOMAIN_RID,
+		windows.DOMAIN_ALIAS_RID_ADMINS,
+		0, 0, 0, 0, 0, 0,
+		&sid)
+	if err != nil {
+		log.Fatalf("SID Error: %s", err)
+		return false
+	}
+	defer windows.FreeSid(sid)
+
+	// This appears to cast a null pointer so I'm not sure why this
+	// works, but this guy says it does and it Works for Me™:
+	// https://github.com/golang/go/issues/28804#issuecomment-438838144
+	token := windows.Token(0)
+
+	// Also note that an admin is _not_ necessarily considered
+	// elevated.
+	// For elevation see https://github.com/mozey/run-as-admin
+	return token.IsElevated()
 }
 
 func politeGoodbye(text *tview.TextView, form *tview.Form) {
@@ -257,7 +348,7 @@ func politeGoodbye(text *tview.TextView, form *tview.Form) {
 																form.ClearButtons()
 																form.AddButton("A rubber room with veins.", func() {
 
-																	log.Fatal(fmt.Errorf("They're out"))
+																	log.Fatal(fmt.Errorf("they're outthey're outthey're outthey're outthey're outthey're outthey're outthey're outthey're outthey're out\nthey're outthey're outthey're outthey're outthey're outthey're outthey're outthey're outthey're outthey're out\nthey're outthey're outthey're outthey're outthey're outthey're outthey're outthey're outthey're outthey're out\nthey're outthey're outthey're outthey're outthey're outthey're outthey're outthey're outthey're outthey're out\nthey're outthey're outthey're outthey're outthey're outthey're outthey're outthey're outthey're outthey're out\nthey're outthey're outthey're outthey're outthey're outthey're outthey're outthey're outthey're outthey're out\nthey're outthey're outthey're outthey're outthey're outthey're outthey're outthey're outthey're outthey're out"))
 																})
 																text.SetText(flower)
 																text.SetTextColor(tcell.ColorRed)
@@ -304,106 +395,6 @@ func RemoveIndex(s []string, index int) []string {
 	return append(ret, s[index+1:]...)
 }
 
-var winConfig string
-
 type firstboot struct {
 	installed bool
 }
-
-var EULA = []string{
-	"               GLWT(Good Luck With That) Public License",
-	"Copyright (c) Everyone, except Author",
-	"",
-	"Everyone is permitted to copy, distribute, modify, merge, sell, publish,",
-	"sublicense or whatever they want with this software but at their OWN RISK.",
-	"",
-	"		   Preamble",
-	"",
-	"The author has absolutely no clue what the code in this project does.",
-	"It might just work or not, there is no third option.",
-	"",
-	"",
-	"GOOD LUCK WITH THAT PUBLIC LICENSE",
-	"TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION, AND MODIFICATION",
-	"",
-	"0. You just DO WHATEVER YOU WANT TO as long as you NEVER LEAVE A",
-	"TRACE TO TRACK THE AUTHOR of the original product to blame for or hold",
-	"responsible.",
-	"",
-	"IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER",
-	"LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING",
-	"FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER",
-	"DEALINGS IN THE SOFTWARE.",
-	"",
-	"Good luck and Godspeed.",
-}
-
-var politeBye = []string{
-	"	                                                                                                                                                  ",
-	"                                                                                                                                                     ",
-	"FFFFFFFFFFFFFFFFFFFFFF                                      kkkkkkkk                     OOOOOOOOO        ffffffffffffffff    ffffffffffffffff       ",
-	"F::::::::::::::::::::F                                      k::::::k                   OO:::::::::OO     f::::::::::::::::f  f::::::::::::::::f      ",
-	"F::::::::::::::::::::F                                      k::::::k                 OO:::::::::::::OO  f::::::::::::::::::ff::::::::::::::::::f     ",
-	"FF::::::FFFFFFFFF::::F                                      k::::::k                O:::::::OOO:::::::O f::::::fffffff:::::ff::::::fffffff:::::f     ",
-	" F:::::F       FFFFFFuuuuuu    uuuuuu      cccccccccccccccc k:::::k    kkkkkkk     O::::::O   O::::::O f:::::f       fffffff:::::f       ffffff      ",
-	" F:::::F             u::::u    u::::u    cc:::::::::::::::c k:::::k   k:::::k      O:::::O     O:::::O f:::::f             f:::::f                   ",
-	" F::::::FFFFFFFFFF   u::::u    u::::u   c:::::::::::::::::c k:::::k  k:::::k       O:::::O     O:::::Of:::::::ffffff      f:::::::ffffff             ",
-	" F:::::::::::::::F   u::::u    u::::u  c:::::::cccccc:::::c k:::::k k:::::k        O:::::O     O:::::Of::::::::::::f      f::::::::::::f             ",
-	" F:::::::::::::::F   u::::u    u::::u  c::::::c     ccccccc k::::::k:::::k         O:::::O     O:::::Of::::::::::::f      f::::::::::::f             ",
-	" F::::::FFFFFFFFFF   u::::u    u::::u  c:::::c              k:::::::::::k          O:::::O     O:::::Of:::::::ffffff      f:::::::ffffff             ",
-	" F:::::F             u::::u    u::::u  c:::::c              k:::::::::::k          O:::::O     O:::::O f:::::f             f:::::f                   ",
-	" F:::::F             u:::::uuuu:::::u  c::::::c     ccccccc k::::::k:::::k         O::::::O   O::::::O f:::::f             f:::::f                   ",
-	"FF:::::::FF           u:::::::::::::::uuc:::::::cccccc:::::ck::::::k k:::::k        O:::::::OOO:::::::Of:::::::f           f:::::::f                 ",
-	"F::::::::FF            u:::::::::::::::u c:::::::::::::::::ck::::::k  k:::::k        OO:::::::::::::OO f:::::::f           f:::::::f                 ",
-	"F::::::::FF             uu::::::::uu:::u  cc:::::::::::::::ck::::::k   k:::::k         OO:::::::::OO   f:::::::f           f:::::::f                 ",
-	"FFFFFFFFFFF               uuuuuuuu  uuuu    cccccccccccccccckkkkkkkk    kkkkkkk          OOOOOOOOO     fffffffff           fffffffff                 ",
-}
-
-var fymnuh = `                                                                                                                                                                           
-                                                                                                                                                                           
-ffffffffffffffff                                                                                            hhhhhhh                                   hhhhhhh             
-f::::::::::::::::f                                                                                          h:::::h                                   h:::::h             
-f::::::::::::::::::f                                                                                        h:::::h                                   h:::::h             
-f::::::fffffff:::::f                                                                                        h:::::h                                   h:::::h             
-f:::::f       ffffffyyyyyyy           yyyyyyy mmmmmmm    mmmmmmm         nnnn  nnnnnnnn    uuuuuu    uuuuuu  h::::h hhhhh            uuuuuu    uuuuuu  h::::h hhhhh       
-f:::::f               y:::::y         y:::::ymm:::::::m  m:::::::mm      n:::nn::::::::nn  u::::u    u::::u  h::::hh:::::hhh         u::::u    u::::u  h::::hh:::::hhh    
-f:::::::ffffff         y:::::y       y:::::ym::::::::::mm::::::::::m     n::::::::::::::nn u::::u    u::::u  h::::::::::::::hh       u::::u    u::::u  h::::::::::::::hh  
-f::::::::::::f          y:::::y     y:::::y m::::::::::::::::::::::m     nn:::::::::::::::nu::::u    u::::u  h:::::::hhh::::::h      u::::u    u::::u  h:::::::hhh::::::h 
-f::::::::::::f           y:::::y   y:::::y  m:::::mmm::::::mmm:::::m       n:::::nnnn:::::nu::::u    u::::u  h::::::h   h::::::h     u::::u    u::::u  h::::::h   h::::::h
-f:::::::ffffff            y:::::y y:::::y   m::::m   m::::m   m::::m       n::::n    n::::nu::::u    u::::u  h:::::h     h:::::h     u::::u    u::::u  h:::::h     h:::::h
-f:::::f                    y:::::y:::::y    m::::m   m::::m   m::::m       n::::n    n::::nu::::u    u::::u  h:::::h     h:::::h     u::::u    u::::u  h:::::h     h:::::h
-f:::::f                     y:::::::::y     m::::m   m::::m   m::::m       n::::n    n::::nu:::::uuuu:::::u  h:::::h     h:::::h     u:::::uuuu:::::u  h:::::h     h:::::h
-f:::::::f                    y:::::::y      m::::m   m::::m   m::::m       n::::n    n::::nu:::::::::::::::uuh:::::h     h:::::h     u:::::::::::::::uuh:::::h     h:::::h
-f:::::::f                     y:::::y       m::::m   m::::m   m::::m       n::::n    n::::n u:::::::::::::::uh:::::h     h:::::h      u:::::::::::::::uh:::::h     h:::::h
-f:::::::f                    y:::::y        m::::m   m::::m   m::::m       n::::n    n::::n  uu::::::::uu:::uh:::::h     h:::::h       uu::::::::uu:::uh:::::h     h:::::h
-fffffffff                   y:::::y         mmmmmm   mmmmmm   mmmmmm       nnnnnn    nnnnnn    uuuuuuuu  uuuuhhhhhhh     hhhhhhh         uuuuuuuu  uuuuhhhhhhh     hhhhhhh
-						   y:::::y                                                                                                                                        
-					      y:::::y                                                                                                                                         
-					     y:::::y                                                                                                                                          
-					    y:::::y                                                                                                                                           
-					   yyyyyyy                                                                                                                                            
-																																									   
-																																									   `
-var flower = `
-█████████████▀▀▀▀▀███████▀▀▀▀▀█████████████
-█████████▀░░▀▀█▄▄▄▄▄▄██▄▄▄▄▄▄█▀░░▀█████████
-████████▄░░▄▄████▀▀▀▀▀▀▀▀▀████▄▄░░▄████████
-████▀▀▀▀█████▀░░░░░░░░░░░░░░░▀█████▀▀▀▀████
-██▀░░░░░░██▀░░░░░░██░░░██░░░░░░▀██░░░░░░▀██
-█░░░▀▀▀▀███░░░░░░░██░░░██░░░░░░░███▀▀▀▀░░░█
-█▄▄░░░░░░██░░░░▄░░▀▀░░░▀▀░░▄░░░░██░░░░░░▄▄█
-████▄░░░░▀██░░░░███████████░░░░██▀░░░░▄████
-██████████▀██▄░░░▀███████▀░░░▄██▀██████████
-███████▀░░░████▄▄░░░░░░░░░▄▄████░░░▀███████
-██████░░░▄▀░░▀▀▀███████████▀▀▀░░▀▄░░░██████
-██████░░░▀░░░░░░░░▄▄▄█▄▄▄░░░░░░░░▀░░░██████
-████████▄▄▄▄▄▄███████████████▄▄▄▄▄▄████████
-██████████████████▀░░▀█████████████████████
-█████████████████▀░░░▄█████████████████████
-█████████████████░░░███████████████████████
-██████████████████░░░▀█████████████████████
-███████████████████▄░░░████████████████████
-█████████████████████░░░███████████████████
-
-
-`
