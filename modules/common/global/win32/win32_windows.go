@@ -49,7 +49,7 @@ func AddUser() bool {
 		TextLog <- err.Error()
 		return false
 	}
-	cmdcensor := `New-LocalUser -AccountNeverExpires -Description "HSVR ELO statistics bot User" -Disabled -FullName "HSVR ELO Statistics Service User" -Name "HSVRUSB" -Password (ConvertTo-SecureString "` + censor + `" -AsPlainText -Force) -PasswordNeverExpires`
+	cmdcensor := `New-LocalUser -AccountNeverExpires -Description "HSVR USB 2.0 Service User" -Disabled -FullName "HSVR UselessStatisticsBot 2.0" -Name "HSVRUSB" -Password (ConvertTo-SecureString "` + censor + `" -AsPlainText -Force) -PasswordNeverExpires`
 	TextLog <- cmdcensor
 	TextLog <- "Collecting results..."
 	fmt.Fprintln(stdin, cmd+"\n"+exitcmd)
