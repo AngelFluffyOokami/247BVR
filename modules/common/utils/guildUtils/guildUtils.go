@@ -1,7 +1,7 @@
 package guildUtils
 
 import (
-	"github.com/angelfluffyookami/247BVR/modules/common/global"
+	"github.com/angelfluffyookami/HSVRUSB/modules/common/global"
 	"github.com/tjarratt/babble"
 )
 

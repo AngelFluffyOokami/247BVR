@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/angelfluffyookami/247BVR/modules/common/global"
-	"github.com/angelfluffyookami/247BVR/modules/handlers"
+	"github.com/angelfluffyookami/HSVRUSB/modules/common/global"
+	"github.com/angelfluffyookami/HSVRUSB/modules/handlers"
 	"github.com/google/uuid"
 	"nhooyr.io/websocket"
 	"nhooyr.io/websocket/wsjson"

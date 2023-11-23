@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/angelfluffyookami/247BVR/modules/common/global"
+	"github.com/angelfluffyookami/HSVRUSB/modules/common/global"
 )
 
 func GetUserByID(ID string) (UserStruct, error) {

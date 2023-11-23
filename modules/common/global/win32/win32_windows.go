@@ -7,12 +7,20 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"os/user"
 
+	"github.com/bradfitz/iter"
 	"github.com/tjarratt/babble"
 )
 
 func AddUser() bool {
 
+	TextLog <- "Ensuring user not exists already..."
+	_, err := user.Lookup("HSVRUSB")
+	if err == nil {
+		TextLog <- "User Already exists, skipping step"
+		return true
+	}
 	TextLog <- "Loading Windows Powershell..."
 
 	TextLog <- "Creating powershell runspace..."
@@ -20,26 +28,37 @@ func AddUser() bool {
 	TextLog <- "Runspace created"
 	pwd := newPassword()
 
+	censor := ""
+	for range iter.N(len(pwd)) {
+		censor += "*"
+	}
 	TextLog <- "Attempting user create..."
-	TextLog <- "New-LocalUser -AccountNeverExpires -Description \"HSVR ELO statistics bot User\" -Disabled -FullName \"HSVR ELO Statistics Service User\" -Name \"247bvr\" -Password \"" + pwd + "\" -PasswordNeverExpires -Confirm"
 
-	//	env := `[System.Environment]::SetEnvironmentVariable("Path", $Env:Path + ";$APP_PATH\bin", [System.EnvironmentVariableTarget]::User)`
-	cmd := `New-LocalUser -AccountNeverExpires -Description "HSVR ELO statistics bot User" -Disabled -FullName "HSVR ELO Statistics Service User" -Name "247bvr" -Password (ConvertTo-SecureString "` + pwd + `" -AsPlainText -Force) -PasswordNeverExpires`
+	cmd := `New-LocalUser -AccountNeverExpires -Description "HSVR USB 2.0 Service User" -Disabled -FullName "HSVR UselessStatisticsBot 2.0" -Name "HSVRUSB" -Password (ConvertTo-SecureString "` + pwd + `" -AsPlainText -Force) -PasswordNeverExpires`
+
 	exitcmd := `exit`
+
+	TextLog <- "Summoning child powershell process..."
 	cmdps := exec.Command("powershell", "-nologo", "-noprofile")
+	TextLog <- "Process Summoned"
+
+	TextLog <- "Adding User..."
 	stdin, err := cmdps.StdinPipe()
+	TextLog <- "Opening Stdin pipe...."
 	if err != nil {
 		TextLog <- err.Error()
 		return false
 	}
-	cmdps.StdinPipe()
+	cmdcensor := `New-LocalUser -AccountNeverExpires -Description "HSVR ELO statistics bot User" -Disabled -FullName "HSVR ELO Statistics Service User" -Name "HSVRUSB" -Password (ConvertTo-SecureString "` + censor + `" -AsPlainText -Force) -PasswordNeverExpires`
+	TextLog <- cmdcensor
+	TextLog <- "Collecting results..."
 	fmt.Fprintln(stdin, cmd+"\n"+exitcmd)
-	out, err := cmdps.CombinedOutput()
+	_, err = cmdps.CombinedOutput()
 	if err != nil {
 		TextLog <- err.Error()
 		return false
 	} else {
-		TextLog <- string(out)
+		TextLog <- "Created user HSVRUSB with password " + censor + " as ADMINISTRATOR"
 	}
 
 	if err != nil {
@@ -58,11 +77,11 @@ func newPassword() string {
 }
 
 func populatePF() bool {
-	TextLog <- "mkdir C:\\Program Files\\247bvr\\"
-	err := os.MkdirAll("C:\\Program Files\\247bvr\\", 0755)
+	TextLog <- "mkdir C:\\Program Files\\HSVRUSB\\"
+	err := os.MkdirAll("C:\\Program Files\\HSVRUSB\\", 0755)
 
 	if os.IsExist(err) {
-		TextLog <- "Folder already exists"
+		TextLog <- "Folder already exists, skipping step"
 		return true
 	} else if err != nil {
 		TextLog <- err.Error()
@@ -74,11 +93,11 @@ func populatePF() bool {
 }
 
 func populateAD() bool {
-	TextLog <- "mkdir C:\\Users\\247bvr\\AppData\\Roaming\\247bvr\\"
-	err := os.MkdirAll("C:\\Users\\247bvr\\AppData\\Roaming\\247bvr\\", 0755)
+	TextLog <- "mkdir C:\\Users\\HSVRUSB\\AppData\\Roaming\\HSVRUSB\\"
+	err := os.MkdirAll("C:\\Users\\HSVRUSB\\AppData\\Roaming\\HSVRUSB\\", 0755)
 
 	if os.IsExist(err) {
-		TextLog <- "Folder already exists"
+		TextLog <- "Folder already exists, skipping step"
 		return true
 	} else if err != nil {
 		TextLog <- err.Error()
@@ -90,11 +109,11 @@ func populateAD() bool {
 }
 
 func populateADConf() bool {
-	TextLog <- "mkdir C:\\Users\\247bvr\\AppData\\Roaming\\247bvr\\config\\"
-	err := os.MkdirAll("C:\\Users\\247bvr\\AppData\\Roaming\\247bvr\\config\\", 0755)
+	TextLog <- "mkdir C:\\Users\\HSVRUSB\\AppData\\Roaming\\HSVRUSB\\config\\"
+	err := os.MkdirAll("C:\\Users\\HSVRUSB\\AppData\\Roaming\\HSVRUSB\\config\\", 0755)
 
 	if os.IsExist(err) {
-		TextLog <- "Folder already exists"
+		TextLog <- "Folder already exists, skipping step"
 		return true
 	} else if err != nil {
 		TextLog <- err.Error()
@@ -106,11 +125,11 @@ func populateADConf() bool {
 }
 
 func populateADDb() bool {
-	TextLog <- "mkdir C:\\Users\\247bvr\\AppData\\Roaming\\247bvr\\vtol.vr\\"
-	err := os.MkdirAll("C:\\Users\\247bvr\\AppData\\Roaming\\247bvr\\vtol.vr\\", 0755)
+	TextLog <- "mkdir C:\\Users\\HSVRUSB\\AppData\\Roaming\\HSVRUSB\\vtol.vr\\"
+	err := os.MkdirAll("C:\\Users\\HSVRUSB\\AppData\\Roaming\\HSVRUSB\\vtol.vr\\", 0755)
 
 	if os.IsExist(err) {
-		TextLog <- "Folder already exists"
+		TextLog <- "Folder already exists, skipping step"
 		return true
 	} else if err != nil {
 		TextLog <- err.Error()
@@ -157,7 +176,7 @@ func populatePaths() bool {
 	TextLog <- "Binary loaded into memory"
 	TextLog <- "Attempting to copy into place..."
 
-	dest, err := os.Create("C:\\Program Files\\247bvr\\247bvr.exe")
+	dest, err := os.Create("C:\\Program Files\\HSVRUSB\\HSVRUSB.exe")
 	if err != nil {
 		TextLog <- err.Error()
 		return false
@@ -172,6 +191,6 @@ func populatePaths() bool {
 		return false
 	}
 
-	TextLog <- "Finished copying " + fmt.Sprint(nbytes) + " to C:\\Program Files\\247bvr\\247bvr.exe"
+	TextLog <- "Finished copying " + fmt.Sprint(nbytes) + " bytes to C:\\Program Files\\HSVRUSB\\HSVRUSB.exe"
 	return true
 }

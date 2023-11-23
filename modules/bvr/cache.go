@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/angelfluffyookami/247BVR/modules/common/global"
-	"github.com/angelfluffyookami/247BVR/modules/common/utils/logger"
+	"github.com/angelfluffyookami/HSVRUSB/modules/common/global"
+	"github.com/angelfluffyookami/HSVRUSB/modules/common/utils/logger"
 )
 
 var firstBootDone bool

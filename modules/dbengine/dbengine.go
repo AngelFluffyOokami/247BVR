@@ -3,7 +3,7 @@ package dbengine
 import (
 	"fmt"
 
-	"github.com/angelfluffyookami/247BVR/modules/common/global"
+	"github.com/angelfluffyookami/HSVRUSB/modules/common/global"
 	scribble "github.com/nanobox-io/golang-scribble"
 )
 

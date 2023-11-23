@@ -5,7 +5,7 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/angelfluffyookami/247BVR/modules/common/global"
+	"github.com/angelfluffyookami/HSVRUSB/modules/common/global"
 	scribble "github.com/nanobox-io/golang-scribble"
 )
 
@@ -28,7 +28,7 @@ func (ctx *User) AddOrUpdateUser() {
 
 func (ctx *User) lookupUser() {
 
-	if _, err := os.Stat(basePath + "/247BVR/" + ctx.UserID); os.IsNotExist(err) {
+	if _, err := os.Stat(basePath + "/HSVRUSB/" + ctx.UserID); os.IsNotExist(err) {
 		// path/to/whatever does not exist
 	}
 	ctx.lookup = true
@@ -36,9 +36,9 @@ func (ctx *User) lookupUser() {
 
 func setBasePath() {
 	if runtime.GOOS == "windows" {
-		if _, err := os.Stat("C:\\Users\\Public\\247BVR"); err != nil {
-			fmt.Println("247BVR folder does not exists, attempting to create.")
-			os.Mkdir("C:\\Users\\Public\\247BVR", 0755)
+		if _, err := os.Stat("C:\\Users\\Public\\HSVRUSB"); err != nil {
+			fmt.Println("HSVRUSB folder does not exists, attempting to create.")
+			os.Mkdir("C:\\Users\\Public\\HSVRUSB", 0755)
 		}
 
 	}

@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/angelfluffyookami/247BVR/modules/common/global"
+	"github.com/angelfluffyookami/HSVRUSB/modules/common/global"
 )
 
 type logEntry struct {

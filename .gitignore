@@ -5,8 +5,7 @@
 *.sum
 vtol.vr/*
 vtol.vr
-sample
-sample/*
+
 *.exe
 *.dll
 __debug*

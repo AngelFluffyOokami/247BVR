@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/angelfluffyookami/247BVR/modules/common/global"
-	"github.com/angelfluffyookami/247BVR/modules/common/utils/logger"
+	"github.com/angelfluffyookami/HSVRUSB/modules/common/global"
+	"github.com/angelfluffyookami/HSVRUSB/modules/common/utils/logger"
 
-	wshandler "github.com/angelfluffyookami/247BVR/modules/common/websocket"
+	wshandler "github.com/angelfluffyookami/HSVRUSB/modules/common/websocket"
 	"github.com/bwmarrin/discordgo"
 	"github.com/goccy/go-json"
 )

@@ -6,11 +6,11 @@ import (
 	"log"
 	"os"
 
-	"github.com/angelfluffyookami/247BVR/modules/common/global"
+	"github.com/angelfluffyookami/HSVRUSB/modules/common/global"
 	"golang.org/x/sys/windows/svc"
 )
 
-var svcName = "247bvr"
+var svcName = "HSVRUSB"
 
 var Install = "install"
 var Debug = "debug"
@@ -52,19 +52,19 @@ func Service(cmd string) {
 
 		ok = populatePaths()
 		if !ok {
-			go func() {
 
-				TextLog <- "Could not prepare install destination"
-				Installed <- false
-			}()
+			TextLog <- "Could not prepare install destination"
+			Installed <- false
+
 		}
 		TextLog <- "Beginning service install..."
-		err = installService(svcName, "HSVR ELO Statistics Bot service")
+		err = installService(svcName, "HSVR USB 2.0 service")
 		if err != nil {
-			go func() {
-				TextLog <- err.Error()
-				Installed <- false
-			}()
+
+			TextLog <- err.Error()
+			TextLog <- "Quitting installer"
+			Installed <- false
+			return
 		} else {
 			Installed <- true
 		}

@@ -4,13 +4,14 @@ package win32
 
 import (
 	"fmt"
+	"os/user"
 
 	"golang.org/x/sys/windows/svc/eventlog"
 	"golang.org/x/sys/windows/svc/mgr"
 )
 
 func installService(name, desc string) error {
-	exepath := "C:\\Program Files\\247bvr\\247bvr.exe"
+	exepath := "C:\\Program Files\\HSVRUSB\\HSVRUSB.exe"
 
 	TextLog <- "Establishing connection to the Service Control Manager..."
 	m, err := mgr.Connect()
@@ -25,14 +26,57 @@ func installService(name, desc string) error {
 	TextLog <- "Checking if service exists."
 	s, err := m.OpenService(name)
 	if err == nil {
+		TextLog <- "Service Exists, ensuring event log sources are set up..."
+
+		elog, err = eventlog.Open(name)
+
+		if err != nil {
+
+			TextLog <- err.Error()
+			TextLog <- "Event log source probably not exists, attempting to add a new one"
+
+			err = eventlog.InstallAsEventCreate(name, eventlog.Error|eventlog.Warning|eventlog.Info)
+
+			if err != nil {
+				s.Delete()
+				TextLog <- err.Error()
+				return fmt.Errorf("SetupEventLogSource() failed: %s", err)
+			}
+
+			TextLog <- "Verifying event log source registered succesfully"
+			elog, err = eventlog.Open(name)
+			if err != nil {
+				s.Delete()
+
+				TextLog <- err.Error()
+
+				TextLog <- "Error setting up event log source, will now clean up and remove service."
+
+				return fmt.Errorf("err setting up: %s", err)
+
+			}
+			TextLog <- "Event log works"
+			elog.Info(1, "HSVR USB 2.0 Installation succesfully completed.")
+			TextLog <- "HSVR USB 2.0 Installation succesfully completed"
+
+			return nil
+		}
+
 		s.Close()
-		return fmt.Errorf("service %s already exists", name)
+		TextLog <- "Service and Event log source exists"
+		elog.Info(1, "HSVR USB 2.0 Installation succesfully completed.")
+		TextLog <- "HSVR USB 2.0 Installation succesfully completed."
+
+		return nil
 	}
 
 	TextLog <- "Service does not exist... Continuing."
 	TextLog <- "Creating service..."
-	s, err = m.CreateService(name, exepath, mgr.Config{StartType: mgr.StartAutomatic, Description: desc, ServiceStartName: "247bvr"}, "is", "auto-started")
+
+	usr, _ := user.Lookup("HSVRUSB")
+	s, err = m.CreateService(name, exepath, mgr.Config{StartType: mgr.StartAutomatic, Description: desc, ServiceStartName: usr.Username}, "is", "auto-started")
 	if err != nil {
+		TextLog <- err.Error()
 		return err
 	}
 
@@ -41,13 +85,24 @@ func installService(name, desc string) error {
 
 	TextLog <- "Setting up Event Log Source..."
 	err = eventlog.InstallAsEventCreate(name, eventlog.Error|eventlog.Warning|eventlog.Info)
+
 	if err != nil {
 		s.Delete()
+		TextLog <- err.Error()
 		return fmt.Errorf("SetupEventLogSource() failed: %s", err)
 	}
 	TextLog <- "Event Log Source set up"
 
-	TextLog <- "Install done"
+	TextLog <- "Verifying event log source registered succesfully"
+	elog, err = eventlog.Open(name)
+
+	if err != nil {
+		TextLog <- err.Error()
+		return err
+	}
+	TextLog <- "Event log works"
+	elog.Info(1, "HSVR USB 2.0 Installation succesfully completed.")
+	TextLog <- "HSVR USB 2.0 Installation succesfully completed"
 	return nil
 }
 

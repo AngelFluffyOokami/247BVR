@@ -70,26 +70,26 @@ var flower = `
 
 `
 
-var firstText = "Welcome to the HSVR USB first run installation utility." + "\n" +
+var firstText = "Welcome to the HSVR USB 2.0 first run installation utility." + "\n" +
 	"If you need to reinstall the bot, just set installed to false in the first run configuration file." + "\n" +
 	"If you only want to move your installation, set `modifyinstall` to true in the first run configuration file." + "\n" +
 	"If you erroneously set first run or modifyinstall to true, exit the application and set either/both flags to false" + "\n" +
-	"Do you wish to continue installing HSVR ELO Statistics Bot?"
+	"Do you wish to continue installing HSVR USB 2.0?"
 
 var scroll = []string{
 	"If you need to reinstall the bot, just set installed to false in the first run configuration file." + "\n" +
 		"If you only want to move your installation, set `modifyinstall` to true in the first run configuration file." + "\n" +
 		"If you erroneously set first run or modifyinstall to true, exit the application and set either/both flags to false" + "\n" +
-		"Do you wish to continue installing HSVR ELO Statistics Bot?",
+		"Do you wish to continue installing HSVR USB 2.0?",
 
 	"If you only want to move your installation, set `modifyinstall` to true in the first run configuration file." + "\n" +
 		"If you erroneously set first run or modifyinstall to true, exit the application and set either/both flags to false" + "\n" +
-		"Do you wish to continue installing HSVR ELO Statistics Bot?",
+		"Do you wish to continue installing HSVR USB 2.0?",
 
 	"If you erroneously set first run or modifyinstall to true, exit the application and set either/both flags to false" + "\n" +
-		"Do you wish to continue installing HSVR ELO Statistics Bot?",
+		"Do you wish to continue installing HSVR USB 2.0?",
 
-	"Do you wish to continue installing HSVR ELO Statistics Bot?",
+	"Do you wish to continue installing HSVR USB 2.0?",
 
 	"",
 }

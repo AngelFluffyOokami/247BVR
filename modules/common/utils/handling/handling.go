@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"runtime"
 
-	"github.com/angelfluffyookami/247BVR/modules/common/global"
-	"github.com/angelfluffyookami/247BVR/modules/common/utils/logger"
+	"github.com/angelfluffyookami/HSVRUSB/modules/common/global"
+	"github.com/angelfluffyookami/HSVRUSB/modules/common/utils/logger"
 )
 
 // Defer at start of functions for panic "handling".

@@ -3,7 +3,7 @@ package discord_session
 import (
 	"log"
 
-	"github.com/angelfluffyookami/247BVR/modules/common/global"
+	"github.com/angelfluffyookami/HSVRUSB/modules/common/global"
 	"github.com/bwmarrin/discordgo"
 )
 

@@ -6,13 +6,13 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/angelfluffyookami/247BVR/modules/bvr"
-	"github.com/angelfluffyookami/247BVR/modules/common/global"
+	"github.com/angelfluffyookami/HSVRUSB/modules/bvr"
+	"github.com/angelfluffyookami/HSVRUSB/modules/common/global"
 
-	"github.com/angelfluffyookami/247BVR/modules/dbengine"
-	"github.com/angelfluffyookami/247BVR/modules/handlers"
+	"github.com/angelfluffyookami/HSVRUSB/modules/dbengine"
+	"github.com/angelfluffyookami/HSVRUSB/modules/handlers"
 
-	discord_session "github.com/angelfluffyookami/247BVR/modules/session"
+	discord_session "github.com/angelfluffyookami/HSVRUSB/modules/session"
 	"github.com/bwmarrin/discordgo"
 )
 

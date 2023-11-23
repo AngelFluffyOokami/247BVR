@@ -5,12 +5,13 @@ package main
 import (
 	"fmt"
 	"log"
+	"math/rand"
 	"os"
 	"strings"
 	"syscall"
 	"time"
 
-	"github.com/angelfluffyookami/247BVR/modules/common/global/win32"
+	"github.com/angelfluffyookami/HSVRUSB/modules/common/global/win32"
 	"github.com/bradfitz/iter"
 	"github.com/gdamore/tcell/v2"
 	scribble "github.com/nanobox-io/golang-scribble"
@@ -35,11 +36,9 @@ func init() {
 		text.SetText(firstText)
 		text.SetBackgroundColor(tcell.ColorBlack)
 		text.SetTextColor(tcell.ColorGreen)
-		text.SetBorderColor(tcell.ColorGreen).SetTitle("HSVR ELO Statistics Bot firstboot Installation")
-
-		text.SetChangedFunc(func() {
-			app.Draw()
-		}).SetWordWrap(true).SetRegions(true)
+		text.SetBorderColor(tcell.ColorGreen).SetTitle("HSVR USB 2.0 First Run Installation Utility")
+		text.SetDisabled(true)
+		text.SetWordWrap(true).SetRegions(true)
 
 		text.SetBorder(true)
 		text.SetDisabled(true)
@@ -69,6 +68,8 @@ func init() {
 			SetRows(0, 3).
 			AddItem(text, 0, 0, 1, 2, 0, 0, false).
 			AddItem(form, 1, 0, 1, 1, 0, 0, true)
+		mainArea.SetFocusFunc(func() {})
+
 		if err := app.SetRoot(mainArea,
 			true).EnableMouse(true).Run(); err != nil {
 			panic(err)
@@ -77,6 +78,14 @@ func init() {
 	} else {
 		continueInit()
 	}
+}
+
+// Make sure user actually knows the installer is doing something,
+// by pretending the installer takes longer than it actually does.
+func longRandLoadTime() int {
+	min := 1000
+	max := 3000
+	return rand.Intn(max-min) + min
 }
 
 func continueFunc(text *tview.TextView, form *tview.Form) {
@@ -127,7 +136,8 @@ func continueFunc(text *tview.TextView, form *tview.Form) {
 
 		text.SetText(newStr + eulastring)
 
-		app.Draw()
+		go app.Draw()
+
 		time.Sleep(100 * time.Millisecond)
 		// If the cursor has reached the bottom of the screen, reset it to the top
 		if cursor == (height - 3) {
@@ -138,7 +148,16 @@ func continueFunc(text *tview.TextView, form *tview.Form) {
 			form.AddButton("Deny", func() {
 				go politeGoodbye(text, form)
 			})
-			app.Draw()
+			app.SetFocus(form.SetFocus(0))
+			form.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+				if event.Key() == tcell.KeyLeft {
+					app.SetFocus(form.SetFocus(0))
+				} else if event.Key() == tcell.KeyRight {
+					app.SetFocus(form.SetFocus(1))
+				}
+				return event
+			})
+			go app.Draw()
 			break
 
 		}
@@ -173,8 +192,17 @@ func installMethod(text *tview.TextView, form *tview.Form) {
 
 		for {
 			if !admin() {
-				becomeAdmin()
-				os.Exit(0)
+				text.SetTitle("Administrator Privileges required")
+				text.SetText("It appears the installer lacks administrator privileges.\nPlease allow administrator privileges in the following popup.")
+				form.ClearButtons()
+				form.AddButton("Okay", func() {
+					becomeAdmin()
+					os.Exit(0)
+				})
+				app.SetFocus(form.SetFocus(0))
+				go app.Draw()
+				break
+
 			} else {
 				text.SetTitle("Installing...")
 				app.SetRoot(text, true)
@@ -187,37 +215,82 @@ func installMethod(text *tview.TextView, form *tview.Form) {
 
 	})
 	form.AddButton("Current User", func() {})
+	app.SetFocus(form.SetFocus(0))
+	form.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		if event.Key() == tcell.KeyLeft {
+			app.SetFocus(form.SetFocus(0))
+		} else if event.Key() == tcell.KeyRight {
+			app.SetFocus(form.SetFocus(1))
+		}
+		return event
+	})
 	go app.Draw()
+}
+
+func shortRandLoadTime() int {
+	min := 100
+	max := 400
+	return rand.Intn(max-min) + min
+}
+
+func decideRandTime() int {
+	min := 1
+	max := 10
+	chances := rand.Intn(max-min) + min
+	if chances <= 4 {
+		return shortRandLoadTime()
+	} else {
+		return longRandLoadTime()
+	}
 }
 
 var logvar []string
 
 func handleLog(text *tview.TextView, form *tview.Form) {
 	for {
+		// Pretend it takes longer than it does for :sparkles:(✨ reference omg???) user experience :sparkles:(✨ reference omg???) or some shit
+		time.Sleep(time.Duration(decideRandTime()) * time.Millisecond)
 		select {
 		case currentLog := <-win32.TextLog:
-			_, _, _, height := text.GetInnerRect()
-			if len(logvar) <= height {
-				logvar = append(logvar, currentLog)
-			} else {
-				RemoveIndex(logvar, 0)
-				logvar = append(logvar, currentLog)
-			}
-
+			logvar = append(logvar, currentLog)
 			var logs string
-			for _, v := range logvar {
-				if logs == "" {
+			for b, v := range logvar {
+				if b == 0 {
 					logs += v
 				} else {
 					logs += "\n" + v
 				}
-			}
 
+			}
 			text.SetText(logs)
 			go app.Draw()
 		case installed := <-win32.Installed:
 			if installed {
-				return
+
+				text.SetTitle("You like installing services, don't you?")
+
+				logvar = append(logvar, "Press esc key to close installation utility")
+				var logs string
+				for b, v := range logvar {
+					if b == 0 {
+						logs += v
+					} else {
+						logs += "\n" + v
+					}
+
+				}
+
+				app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+					if event.Key() == tcell.KeyEsc {
+						os.Exit(0)
+					}
+					return event
+				})
+
+				text.SetText(logs)
+				go app.Draw()
+				foobar := keepAlive()
+				fmt.Println(foobar)
 			} else {
 				log.Fatal("error installing")
 				return
@@ -226,6 +299,14 @@ func handleLog(text *tview.TextView, form *tview.Form) {
 	}
 }
 
+func keepAlive() int {
+	foo := 1
+	bar := 2
+	for {
+		foo = foo + bar
+	}
+
+}
 func admin() bool {
 	_, err := os.Open("\\\\.\\PHYSICALDRIVE0")
 	if err != nil {

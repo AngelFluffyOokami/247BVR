@@ -10,8 +10,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/angelfluffyookami/247BVR/modules/common/global"
-	"github.com/angelfluffyookami/247BVR/modules/dbengine"
+	"github.com/angelfluffyookami/HSVRUSB/modules/common/global"
+	"github.com/angelfluffyookami/HSVRUSB/modules/dbengine"
 	"github.com/bwmarrin/discordgo"
 )
 
