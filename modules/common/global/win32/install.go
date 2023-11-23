@@ -4,66 +4,50 @@ package win32
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 
 	"golang.org/x/sys/windows/svc/eventlog"
 	"golang.org/x/sys/windows/svc/mgr"
 )
 
-func exePath() (string, error) {
-	prog := ""
-	p, err := filepath.Abs(prog)
-	if err != nil {
-		return "", err
-	}
-	fi, err := os.Stat(p)
-	if err == nil {
-		if !fi.Mode().IsDir() {
-			return p, nil
-		}
-		err = fmt.Errorf("%s is directory", p)
-	}
-	if filepath.Ext(p) == "" {
-		p += ".exe"
-		fi, err := os.Stat(p)
-		if err == nil {
-			if !fi.Mode().IsDir() {
-				return p, nil
-			}
-			err = fmt.Errorf("%s is directory", p)
-			return "", err
-		}
-
-	}
-	return "", err
-}
-
 func installService(name, desc string) error {
-	exepath, err := exePath()
-	if err != nil {
-		return err
-	}
+	exepath := "C:\\Program Files\\247bvr\\247bvr.exe"
+
+	TextLog <- "Establishing connection to the Service Control Manager..."
 	m, err := mgr.Connect()
+
 	if err != nil {
 		return err
 	}
+
+	TextLog <- "Connected to Service Control Manager"
 	defer m.Disconnect()
+
+	TextLog <- "Checking if service exists."
 	s, err := m.OpenService(name)
 	if err == nil {
 		s.Close()
 		return fmt.Errorf("service %s already exists", name)
 	}
-	s, err = m.CreateService(name, exepath, mgr.Config{DisplayName: desc}, "is", "auto-started")
+
+	TextLog <- "Service does not exist... Continuing."
+	TextLog <- "Creating service..."
+	s, err = m.CreateService(name, exepath, mgr.Config{StartType: mgr.StartAutomatic, Description: desc, ServiceStartName: "247bvr"}, "is", "auto-started")
 	if err != nil {
 		return err
 	}
+
+	TextLog <- "Service Created"
 	defer s.Close()
+
+	TextLog <- "Setting up Event Log Source..."
 	err = eventlog.InstallAsEventCreate(name, eventlog.Error|eventlog.Warning|eventlog.Info)
 	if err != nil {
 		s.Delete()
 		return fmt.Errorf("SetupEventLogSource() failed: %s", err)
 	}
+	TextLog <- "Event Log Source set up"
+
+	TextLog <- "Install done"
 	return nil
 }
 
